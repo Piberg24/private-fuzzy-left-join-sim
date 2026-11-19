@@ -9,44 +9,35 @@
 <body>
   <div class="page-shell">
     <header class="top-bar">
-      <h1>Private Fuzzy Left Join</h1>
+      <div class="brand-block">
+        <div class="brand-row">
+          <h1>Private Fuzzy Left Join</h1>
+          <div class="header-actions">
+            <button type="button" id="btn-back" class="btn btn-secondary desktop-only">← Back</button>
+            <button type="button" id="btn-next" class="btn btn-primary desktop-only">Next →</button>
+            <button type="button" id="btn-settings" class="btn btn-outline settings-btn"
+                    aria-expanded="false" aria-controls="settings-pop"
+                    aria-label="Open options">
+              <span class="settings-icon" aria-hidden="true">⚙</span>
+              <span>Options</span>
+              <span class="settings-dot hidden" id="settings-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        <p class="header-intro">
+          Interactive demo of how two databases match records without sharing them. Built for our HSG Advanced Cybersecurity talk on Han, Kim and Son (PoPETs 2025).
+        </p>
+      </div>
+
       <nav class="stepper" aria-label="Protocol steps">
         <ol class="stepper-list" id="stepper-list"></ol>
       </nav>
     </header>
 
-    <section class="controls-bar" aria-label="Simulation controls">
-      <div class="nav-buttons">
-        <button type="button" id="btn-back" class="btn btn-secondary">← Back</button>
-        <button type="button" id="btn-next" class="btn btn-primary">Next →</button>
-        <button type="button" id="btn-reset" class="btn btn-ghost">Reset</button>
-      </div>
-
-      <div class="option-controls">
-        <label class="toggle-label" for="toggle-phonetic">
-          <input type="checkbox" id="toggle-phonetic">
-          <span>Phonetic name key</span>
-        </label>
-
-        <button type="button" id="btn-second-candidate" class="btn btn-outline" aria-pressed="false">
-          Add 2nd candidate in S
-        </button>
-
-        <button type="button" id="btn-randomise" class="btn btn-outline hidden">
-          New random shares
-        </button>
-
-        <label class="toggle-label hidden" id="teacher-toggle-wrap" for="toggle-teacher">
-          <input type="checkbox" id="toggle-teacher">
-          <span>Reveal hidden bits</span>
-        </label>
-      </div>
-    </section>
-
     <div class="step-bar" id="step-bar">
       <div class="step-heading">
-        <span class="step-count" id="step-count">Step 1 of 6</span>
-        <h2 class="step-title" id="step-title">Inputs</h2>
+        <span class="step-count" id="step-count">Step 1 of 6: Inputs</span>
+        <h2 class="step-title" id="step-title">Two tables, no shared ID</h2>
         <button type="button" id="btn-help" class="help-btn"
                 aria-expanded="false" aria-controls="help-pop"
                 aria-label="Explain this step" title="Explain this step (press ?)">?</button>
@@ -54,19 +45,63 @@
       <span class="nav-hint" aria-hidden="true">
         <span class="hint-keys"><kbd>←</kbd> <kbd>→</kbd> to move, <kbd>?</kbd> to explain</span>
       </span>
-
-      <div id="help-pop" class="help-pop" role="dialog" aria-modal="false" aria-labelledby="help-title">
-        <div class="help-head">
-          <span class="help-title" id="help-title">1/6: Inputs</span>
-          <button type="button" id="btn-help-close" class="help-close" aria-label="Close explanation">×</button>
-        </div>
-        <ul class="help-list" id="help-list"></ul>
-      </div>
     </div>
 
     <div id="status-hint" class="status-hint hidden" role="status" aria-live="polite"></div>
 
     <main id="stage" class="stage"></main>
+  </div>
+
+  <!-- Centered modal: Step explanation (?) -->
+  <div id="help-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div id="help-pop" class="modal-card help-pop" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="pop-head">
+        <span class="pop-title" id="help-title">1/6: Inputs</span>
+        <button type="button" id="btn-help-close" class="pop-close" aria-label="Close explanation">×</button>
+      </div>
+      <ul class="help-list" id="help-list"></ul>
+    </div>
+  </div>
+
+  <!-- Centered modal: Options -->
+  <div id="settings-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div id="settings-pop" class="modal-card settings-pop" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="pop-head">
+        <span class="pop-title" id="settings-title">Options</span>
+        <button type="button" id="btn-settings-close" class="pop-close" aria-label="Close options">×</button>
+      </div>
+
+      <div class="settings-list">
+        <label class="settings-item" for="toggle-phonetic">
+          <span class="settings-text">
+            <strong>Phonetic name key</strong>
+            <small>Maps Mueller and Müller to the same key</small>
+          </span>
+          <input type="checkbox" id="toggle-phonetic">
+        </label>
+
+        <label class="settings-item" for="toggle-second-candidate">
+          <span class="settings-text">
+            <strong>2nd candidate in S</strong>
+            <small>Adds a second Anna Mueller to show earliest key wins</small>
+          </span>
+          <input type="checkbox" id="toggle-second-candidate">
+        </label>
+
+        <label class="settings-item hidden" id="teacher-toggle-wrap" for="toggle-teacher">
+          <span class="settings-text">
+            <strong>Reveal hidden bits</strong>
+            <small>Shows the true answers behind the shares</small>
+          </span>
+          <input type="checkbox" id="toggle-teacher">
+        </label>
+
+        <div class="settings-actions">
+          <button type="button" id="btn-randomise" class="btn btn-outline hidden">New random shares</button>
+          <button type="button" id="btn-reset" class="btn btn-ghost">Reset example</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Mobile bottom dock: steps 1..6 + Back / Next -->

@@ -514,16 +514,27 @@ function shareChip(val, wide) {
   return `<span class="${cls.join(' ')}">${escapeHtml(val)}</span>`;
 }
 
-/** Panel header with an S / R tag so the two parties are told apart at a glance. */
+/** Inline hospital cross emblem for Party S (zero external requests). */
+const HOSPITAL_LOGO_SVG =
+  '<span class="party-logo party-logo-hospital" aria-hidden="true">' +
+  '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">' +
+  '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3z"/>' +
+  '</svg></span>';
+
+const HSG_LOGO_HTML =
+  '<img src="hsg-logo.png" alt="University of St.Gallen" class="party-logo party-logo-hsg">';
+
+/** Panel header with S / R tag and Hospital / HSG logo. */
 function panelHead(party, title, role, id) {
   const tag = party
     ? `<span class="party-tag party-tag-${party.toLowerCase()}" aria-hidden="true">${party}</span>`
     : '';
+  const logo = party === 'S' ? HOSPITAL_LOGO_SVG : party === 'R' ? HSG_LOGO_HTML : '';
   const idAttr = id ? ` id="${id}"` : '';
   const roleHtml = role ? `<span class="panel-role">${role}</span>` : '';
   return `
     <div class="panel-header">
-      <h3 class="panel-title"${idAttr}>${tag}<span>${title}</span></h3>
+      <h3 class="panel-title"${idAttr}>${tag}${logo}<span>${title}</span></h3>
       ${roleHtml}
     </div>`;
 }
@@ -971,17 +982,38 @@ function renderHelp() {
 }
 
 function isHelpOpen() {
-  return document.getElementById('help-pop').classList.contains('is-open');
+  return document.getElementById('help-backdrop').classList.contains('is-open');
+}
+
+function isSettingsOpen() {
+  return document.getElementById('settings-backdrop').classList.contains('is-open');
 }
 
 function setHelpOpen(open, restoreFocus) {
-  const pop = document.getElementById('help-pop');
+  const backdrop = document.getElementById('help-backdrop');
   const btn = document.getElementById('btn-help');
-  if (open) renderHelp();
-  pop.classList.toggle('is-open', open);
+  if (open) {
+    setSettingsOpen(false);
+    renderHelp();
+  }
+  backdrop.classList.toggle('is-open', open);
+  backdrop.setAttribute('aria-hidden', String(!open));
   btn.setAttribute('aria-expanded', String(open));
   btn.classList.toggle('is-active', open);
-  if (!open && restoreFocus && pop.contains(document.activeElement)) {
+  if (!open && restoreFocus) {
+    btn.focus({ preventScroll: true });
+  }
+}
+
+function setSettingsOpen(open, restoreFocus) {
+  const backdrop = document.getElementById('settings-backdrop');
+  const btn = document.getElementById('btn-settings');
+  if (open) setHelpOpen(false);
+  backdrop.classList.toggle('is-open', open);
+  backdrop.setAttribute('aria-hidden', String(!open));
+  btn.setAttribute('aria-expanded', String(open));
+  btn.classList.toggle('is-active', open);
+  if (!open && restoreFocus) {
     btn.focus({ preventScroll: true });
   }
 }
@@ -1033,13 +1065,10 @@ function render(direction) {
 
   document.getElementById('toggle-phonetic').checked = state.usePhonetic;
   document.getElementById('toggle-teacher').checked = state.teacherView;
+  document.getElementById('toggle-second-candidate').checked = state.hasExtraCandidate;
 
-  const btnSecond = document.getElementById('btn-second-candidate');
-  btnSecond.textContent = state.hasExtraCandidate
-    ? 'Remove 2nd candidate'
-    : 'Add 2nd candidate in S';
-  btnSecond.classList.toggle('is-active', state.hasExtraCandidate);
-  btnSecond.setAttribute('aria-pressed', String(state.hasExtraCandidate));
+  const hasActiveOption = state.usePhonetic || state.hasExtraCandidate || state.teacherView;
+  document.getElementById('settings-dot').classList.toggle('hidden', !hasActiveOption);
 
   // 3. Status hint
   const hintEl = document.getElementById('status-hint');
@@ -1195,18 +1224,21 @@ function insideHorizontalScroller(el) {
   return Boolean(scroller && scroller.scrollWidth > scroller.clientWidth + 1);
 }
 
-function initHelp() {
-  const btn = document.getElementById('btn-help');
-  const pop = document.getElementById('help-pop');
-
-  btn.addEventListener('click', () => setHelpOpen(!isHelpOpen()));
+function initModals() {
+  const helpBtn = document.getElementById('btn-help');
+  const helpBackdrop = document.getElementById('help-backdrop');
+  helpBtn.addEventListener('click', () => setHelpOpen(!isHelpOpen()));
   document.getElementById('btn-help-close').addEventListener('click', () => setHelpOpen(false, true));
+  helpBackdrop.addEventListener('pointerdown', (event) => {
+    if (event.target === helpBackdrop) setHelpOpen(false);
+  });
 
-  // Click or tap outside closes the popup
-  document.addEventListener('pointerdown', (event) => {
-    if (!isHelpOpen()) return;
-    if (pop.contains(event.target) || btn.contains(event.target)) return;
-    setHelpOpen(false);
+  const settingsBtn = document.getElementById('btn-settings');
+  const settingsBackdrop = document.getElementById('settings-backdrop');
+  settingsBtn.addEventListener('click', () => setSettingsOpen(!isSettingsOpen()));
+  document.getElementById('btn-settings-close').addEventListener('click', () => setSettingsOpen(false, true));
+  settingsBackdrop.addEventListener('pointerdown', (event) => {
+    if (event.target === settingsBackdrop) setSettingsOpen(false);
   });
 }
 
@@ -1271,9 +1303,9 @@ function initEvents() {
     render();
   });
 
-  document.getElementById('btn-second-candidate').addEventListener('click', () => {
-    if (!state.hasExtraCandidate) {
-      state.sRows.push({ ...EXTRA_CANDIDATE_S });
+  document.getElementById('toggle-second-candidate').addEventListener('change', (event) => {
+    if (event.target.checked) {
+      if (!state.hasExtraCandidate) state.sRows.push({ ...EXTRA_CANDIDATE_S });
       state.hasExtraCandidate = true;
       state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
       state.statusHint = buildSecondCandidateHint();
@@ -1293,11 +1325,11 @@ function initEvents() {
   stage.addEventListener('change', handleTableEdit);
   stage.addEventListener('animationend', () => stage.classList.remove('enter-next', 'enter-prev'));
 
-  // Keyboard: arrows move, ? or i toggles help, Escape closes it
+  // Keyboard: arrows move, ? or i toggles help, Escape closes open modal
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && isHelpOpen()) {
-      setHelpOpen(false, true);
-      return;
+    if (event.key === 'Escape') {
+      if (isHelpOpen()) { setHelpOpen(false, true); return; }
+      if (isSettingsOpen()) { setSettingsOpen(false, true); return; }
     }
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (isTypingTarget(event.target)) return;
@@ -1313,7 +1345,7 @@ function initEvents() {
     goToStep(event.key === 'ArrowRight' ? state.step + 1 : state.step - 1);
   });
 
-  initHelp();
+  initModals();
 }
 
 if (typeof document !== 'undefined') {
