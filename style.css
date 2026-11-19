@@ -321,11 +321,11 @@ body {
   background-color: var(--light-sand);
   border-left: 4px solid var(--dark-green);
   border-radius: var(--radius);
-  padding: 0.5rem 0.85rem;
+  padding: 0.45rem 0.85rem;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.35rem 0.65rem;
+  gap: 0.25rem 0.9rem;
 }
 
 .caption-step {
@@ -337,9 +337,28 @@ body {
   white-space: nowrap;
 }
 
-.caption-text {
-  font-size: 0.98rem;
+.caption-bullets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.25rem;
+  font-size: 0.94rem;
   color: var(--text);
+}
+
+.caption-bullets li {
+  position: relative;
+  padding-left: 0.75rem;
+}
+
+.caption-bullets li::before {
+  content: "-";
+  position: absolute;
+  left: 0;
+  color: var(--dark-green);
+  font-weight: 700;
 }
 
 /* --------------------------------------------------------------------------

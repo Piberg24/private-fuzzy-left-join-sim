@@ -50,43 +50,61 @@ const STEP_META = [
     num: 1,
     short: 'Inputs',
     title: '1/6 · Inputs',
-    caption:
-      'S (left) holds hospital admissions; R (right) wants them for its participants. No shared ID, dirty data, neither side sees the other’s table.'
+    bullets: [
+      "2 separate tables (neither side sees the other's data)",
+      'HSG wants hospital admissions for its study',
+      'Dirty real-life data: typos, missing dates, no shared ID'
+    ]
   },
   {
     num: 2,
     short: 'Features',
     title: '2/6 · Features',
-    caption:
-      'Both sides build 3 ordered features (f1 strongest → f3 weakest) locally. Empty fields make any feature containing them unusable.'
+    bullets: [
+      'Each side builds 3 ordered keys locally (f1 strongest, f3 weakest)',
+      'Empty fields break every key that needs them',
+      'Nothing leaves either table yet'
+    ]
   },
   {
     num: 3,
     short: 'Circuit-PSI',
     title: '3/6 · Circuit-PSI',
-    caption:
-      'Test f1, f2, and f3 separately: does S have it? Each yes/no bit b is split into two random-looking shares (s for S, r for R, with s ⊕ r = b).'
+    bullets: [
+      'Test f1, f2, and f3 one by one: is this key in S?',
+      'Each yes/no bit b is split into two shares (s ⊕ r = b)',
+      'One person can still hit more than one feature'
+    ]
   },
   {
     num: 4,
     short: 'Pick 1 (OTO)',
     title: '4/6 · MPC (OTO)',
-    caption:
-      'Step 3 gave 3 separate yes/no shares (multiple “yes” possible). MPC keeps only the EARLIEST “yes” (f1 → f2 → f3) and outputs fresh shares (simulated centrally).'
+    bullets: [
+      'Step 3 gave 3 separate answers per person',
+      'MPC keeps only the first yes (f1 → f2 → f3) and drops the rest',
+      'Both sides get fresh shares (computed centrally in this demo)'
+    ]
   },
   {
     num: 5,
     short: 'Payload',
     title: '5/6 · Payload',
-    caption:
-      'Each row gets a locked admissions number split into two shares (s ⊕ r = admissions). Unmatched rows get a random dummy number so neither side can tell who matched.'
+    bullets: [
+      'Each row gets a locked admissions count split into two shares (s ⊕ r)',
+      'Unmatched rows get a random dummy number instead',
+      'Both look like random numbers, so neither side knows who matched'
+    ]
   },
   {
     num: 6,
     short: 'Output',
     title: '6/6 · Output',
-    caption:
-      'S sends its shares to R. R computes s ⊕ r to read the joined table (admissions or no match ⊥). S learns nothing.'
+    bullets: [
+      'S sends its shares to R, and R computes s ⊕ r',
+      'Match = 1 reveals admissions, Match = 0 discards the dummy',
+      'S learns nothing about R or which patients matched'
+    ]
   }
 ];
 
@@ -894,7 +912,7 @@ function renderStep4() {
     <div class="flow-strip" aria-hidden="true">
       <span class="flow-pill">3 shares from Step 3</span>
       <span class="flow-arrow">→</span>
-      <span class="flow-pill is-focus">MPC keeps ONLY earliest “yes” (f1 → f2 → f3)</span>
+      <span class="flow-pill is-focus">MPC keeps only first yes (f1 → f2 → f3)</span>
       <span class="flow-arrow">→</span>
       <span class="flow-pill">Fresh shares (at most 1 winner)</span>
     </div>
@@ -979,7 +997,7 @@ function renderStep5() {
         const recomb = p.sPayload ^ p.rPayload;
         const meaning = p.matched
           ? `<span class="badge badge-match">${escapeHtml(formatAdmissions(p.truePayload))}</span>`
-          : `<span class="badge badge-nomatch">dummy noise (${recomb}) — discarded in Step 6</span>`;
+          : `<span class="badge badge-nomatch">dummy noise (${recomb}), discarded in Step 6</span>`;
         return `
           <tr>
             <td class="mono"><strong>${escapeHtml(row.id)}</strong></td>
@@ -1247,10 +1265,12 @@ function render() {
     hintEl.classList.add('hidden');
   }
 
-  // 4. Caption
+  // 4. Caption bullets
   const meta = STEP_META[state.step - 1];
   document.getElementById('caption-step').textContent = meta.title;
-  document.getElementById('caption-text').textContent = meta.caption;
+  document.getElementById('caption-text').innerHTML = meta.bullets
+    .map((line) => `<li>${escapeHtml(line)}</li>`)
+    .join('');
 
   // 5. Stage content
   const stage = document.getElementById('stage');
@@ -1335,7 +1355,7 @@ function handleTableEdit(event) {
 
   // Recompute everything consistently on Step 1
   state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
-  state.statusHint = 'Table edited — all steps recomputed from Step 1. Click Next to walk through the updated protocol.';
+  state.statusHint = 'Table updated. Click Next to run through steps 1 to 6.';
   state.statusHintType = 'warn';
 
   const hintEl = document.getElementById('status-hint');
