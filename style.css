@@ -829,6 +829,7 @@ tr.is-extra-row td {
 .mono {
   font-family: var(--font-mono);
   font-size: 0.86rem;
+  white-space: nowrap;
 }
 
 .muted {
@@ -843,7 +844,7 @@ tr.is-extra-row td {
   background-color: var(--light-sand);
   border: 1px solid var(--sand);
   border-radius: var(--radius-sm);
-  word-break: break-word;
+  white-space: nowrap;
 }
 
 .badge {
