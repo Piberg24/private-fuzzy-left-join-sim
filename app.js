@@ -23,9 +23,9 @@ const DEFAULT_R = [
 ];
 
 const DEFAULT_S = [
-  { id: 'S-1', name: 'Anna Müller', birth: '12.03.1985', zip: '9000', admissions: 2 },
+  { id: 'S-1', name: 'Marco Rossi', birth: '05.05.1969', zip: '9010', admissions: 3 },
   { id: 'S-2', name: 'Peter Frei',  birth: '01.07.1990', zip: '9000', admissions: 1 },
-  { id: 'S-3', name: 'Marco Rossi', birth: '05.05.1969', zip: '9010', admissions: 3 }
+  { id: 'S-3', name: 'Anna Müller', birth: '12.03.1985', zip: '9000', admissions: 2 }
 ];
 
 // Second candidate for the "Ordered" demo:
@@ -78,10 +78,10 @@ const STEP_META = [
     heading: 'Is this key in the other table?',
     title: '3/6: Circuit-PSI',
     bullets: [
-      "For every R row, each key gets a yes or no: does S have the same key?",
-      'Nobody sees that answer. It is split into two random bits, s for S and r for R.',
-      'Only both together give the answer: s ⊕ r = b (⊕ is XOR).',
-      'One person can get a yes on more than one key.'
+      'For every R row, Circuit-PSI checks if that key appears anywhere in S. Row order in S does not matter.',
+      "Slot 1, 2, 3 on S are aligned to R's rows (not S's patients). In the real protocol, permute-and-share aligns the hash buckets across f1, f2 and f3.",
+      'Nobody sees the yes/no bit. It is split into two random bits, s for S and r for R, with s ⊕ r = b.',
+      'One person can still hit more than one key.'
     ]
   },
   {
@@ -716,7 +716,7 @@ function renderStep3() {
       { text: 'Next: keep 1 winner' }
     ])}
     <div class="two-col">
-      ${panelHtml('panel-s', panelHead('S', 'What S sees', 'Random bits only. No IDs, just slot numbers.'),
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', "Share slots for R's rows (order in S does not matter)."),
         tableHtml(['Slot', 's for f1', 's for f2', 's for f3'], sBody))}
       ${panelHtml('panel-r', panelHead('R', 'What R sees', 'Random bits only. Alone they mean nothing.'),
         tableHtml(['Study ID', 'r for f1', 'r for f2', 'r for f3'], rBody))}
