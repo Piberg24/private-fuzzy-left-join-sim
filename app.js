@@ -989,11 +989,32 @@ function isSettingsOpen() {
   return document.getElementById('settings-backdrop').classList.contains('is-open');
 }
 
+function isAboutOpen() {
+  return document.getElementById('about-backdrop').classList.contains('is-open');
+}
+
+function setAboutOpen(open, restoreFocus) {
+  const backdrop = document.getElementById('about-backdrop');
+  const btn = document.getElementById('btn-about');
+  if (open) {
+    setHelpOpen(false);
+    setSettingsOpen(false);
+  }
+  backdrop.classList.toggle('is-open', open);
+  backdrop.setAttribute('aria-hidden', String(!open));
+  btn.setAttribute('aria-expanded', String(open));
+  btn.classList.toggle('is-active', open);
+  if (!open && restoreFocus) {
+    btn.focus({ preventScroll: true });
+  }
+}
+
 function setHelpOpen(open, restoreFocus) {
   const backdrop = document.getElementById('help-backdrop');
   const btn = document.getElementById('btn-help');
   if (open) {
     setSettingsOpen(false);
+    setAboutOpen(false);
     renderHelp();
   }
   backdrop.classList.toggle('is-open', open);
@@ -1008,7 +1029,10 @@ function setHelpOpen(open, restoreFocus) {
 function setSettingsOpen(open, restoreFocus) {
   const backdrop = document.getElementById('settings-backdrop');
   const btn = document.getElementById('btn-settings');
-  if (open) setHelpOpen(false);
+  if (open) {
+    setHelpOpen(false);
+    setAboutOpen(false);
+  }
   backdrop.classList.toggle('is-open', open);
   backdrop.setAttribute('aria-hidden', String(!open));
   btn.setAttribute('aria-expanded', String(open));
@@ -1225,6 +1249,14 @@ function insideHorizontalScroller(el) {
 }
 
 function initModals() {
+  const aboutBtn = document.getElementById('btn-about');
+  const aboutBackdrop = document.getElementById('about-backdrop');
+  aboutBtn.addEventListener('click', () => setAboutOpen(!isAboutOpen()));
+  document.getElementById('btn-about-close').addEventListener('click', () => setAboutOpen(false, true));
+  aboutBackdrop.addEventListener('pointerdown', (event) => {
+    if (event.target === aboutBackdrop) setAboutOpen(false);
+  });
+
   const helpBtn = document.getElementById('btn-help');
   const helpBackdrop = document.getElementById('help-backdrop');
   helpBtn.addEventListener('click', () => setHelpOpen(!isHelpOpen()));
@@ -1325,18 +1357,24 @@ function initEvents() {
   stage.addEventListener('change', handleTableEdit);
   stage.addEventListener('animationend', () => stage.classList.remove('enter-next', 'enter-prev'));
 
-  // Keyboard: arrows move, ? or i toggles help, Escape closes open modal
+  // Keyboard: arrows move, ? toggles step help, i toggles info, Escape closes open modal
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+      if (isAboutOpen()) { setAboutOpen(false, true); return; }
       if (isHelpOpen()) { setHelpOpen(false, true); return; }
       if (isSettingsOpen()) { setSettingsOpen(false, true); return; }
     }
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (isTypingTarget(event.target)) return;
 
-    if (event.key === '?' || event.key === 'i' || event.key === 'I') {
+    if (event.key === '?') {
       event.preventDefault();
       setHelpOpen(!isHelpOpen());
+      return;
+    }
+    if (event.key === 'i' || event.key === 'I') {
+      event.preventDefault();
+      setAboutOpen(!isAboutOpen());
       return;
     }
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
