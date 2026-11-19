@@ -960,6 +960,13 @@ tr.is-extra-row td {
 }
 
 /* --------------------------------------------------------------------------
+   Mobile Bottom Dock (hidden on desktop/tablet)
+   -------------------------------------------------------------------------- */
+.mobile-dock {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
    Reduced motion
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
@@ -990,87 +997,120 @@ tr.is-extra-row td {
   }
 
   .page-shell {
-    padding: 0.65rem 0.7rem 1.2rem;
-    gap: 0.6rem;
+    padding: 0.65rem 0.7rem calc(122px + env(safe-area-inset-bottom, 0px));
+    gap: 0.55rem;
   }
 
   .top-bar {
-    gap: 0.5rem;
+    gap: 0.35rem;
   }
 
   .top-bar h1 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
-  /* One horizontal, scrollable row of steps */
+  /* Desktop top stepper moves to the fixed bottom dock on mobile */
   .stepper {
-    min-width: 0;
-    width: calc(100% + 1.4rem);
-    margin: 0 -0.7rem;
-  }
-
-  .stepper-list {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    gap: 0.4rem;
-    padding: 2px 0.7rem 6px;
-  }
-
-  .stepper-list::-webkit-scrollbar {
     display: none;
   }
 
-  .stepper-list li {
-    flex: 0 0 auto;
-    scroll-snap-align: center;
-  }
-
-  .step-btn {
-    min-height: 44px;
-    padding: 0.35rem 0.85rem 0.35rem 0.4rem;
-    white-space: nowrap;
-  }
-
-  .step-btn:hover {
-    transform: none;
-  }
-
-  /* Thumb-friendly controls */
+  /* Keep only Reset + option toggles in the top controls bar */
   .controls-bar {
-    padding: 0.5rem;
-    gap: 0.5rem;
+    padding: 0.45rem;
+    gap: 0.4rem;
   }
 
   .nav-buttons {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 0.45rem;
+    width: auto;
+  }
+
+  #btn-back,
+  #btn-next {
+    display: none;
   }
 
   .btn,
   .toggle-label {
-    min-height: 44px;
-  }
-
-  .nav-buttons .btn {
-    font-size: 0.98rem;
-    padding: 0.5rem 0.8rem;
+    min-height: 40px;
   }
 
   .option-controls {
-    width: 100%;
-    gap: 0.4rem;
+    flex: 1;
+    gap: 0.38rem;
   }
 
   .option-controls .btn,
-  .option-controls .toggle-label {
-    font-size: 0.9rem;
-    padding: 0.42rem 0.85rem;
+  .option-controls .toggle-label,
+  #btn-reset {
+    font-size: 0.86rem;
+    padding: 0.36rem 0.72rem;
+  }
+
+  /* Fixed bottom dock: 6 step pills + Back / Next */
+  .mobile-dock {
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 0.5rem 0.7rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    background-color: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid var(--sand);
+    box-shadow: 0 -4px 16px rgba(10, 95, 45, 0.08);
+    backdrop-filter: blur(8px);
+  }
+
+  .mobile-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.32rem;
+  }
+
+  .mobile-step-btn {
+    width: 100%;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--sand);
+    background-color: var(--light-sand);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-step-btn.is-current {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+    color: var(--white);
+  }
+
+  .mobile-step-btn.is-done {
+    background-color: var(--white);
+    border-color: var(--green);
+    color: var(--dark-green);
+  }
+
+  .mobile-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .mobile-nav .btn {
+    min-height: 44px;
+    font-size: 0.96rem;
+    padding: 0.48rem 0.8rem;
   }
 
   .step-bar {
@@ -1088,7 +1128,7 @@ tr.is-extra-row td {
 
   .step-title {
     flex: 1;
-    font-size: 1.12rem;
+    font-size: 1.08rem;
   }
 
   .help-btn {
@@ -1107,6 +1147,9 @@ tr.is-extra-row td {
 
   .help-pop {
     width: 100%;
+    z-index: 60;
+    max-height: calc(100dvh - 200px);
+    overflow-y: auto;
     padding: 0.85rem 0.95rem 1rem 1.05rem;
   }
 
@@ -1117,7 +1160,7 @@ tr.is-extra-row td {
   }
 
   .help-list {
-    font-size: 1.02rem;
+    font-size: 0.98rem;
   }
 
   .flow-strip {
@@ -1143,7 +1186,7 @@ tr.is-extra-row td {
   }
 
   .panel-header {
-    padding: 0.6rem 0.7rem 0.5rem;
+    padding: 0.55rem 0.7rem 0.48rem;
   }
 
   .panel-body {

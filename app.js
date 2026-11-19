@@ -1004,9 +1004,28 @@ function render(direction) {
       </li>`;
   }).join('');
 
-  // 2. Nav buttons and contextual controls
+  // 1b. Mobile bottom dock step pills (1..6)
+  const mobileSteps = document.getElementById('mobile-steps');
+  if (mobileSteps) {
+    mobileSteps.innerHTML = STEP_META.map((s) => {
+      let cls = 'mobile-step-btn';
+      if (s.num === state.step) cls += ' is-current';
+      else if (s.num < state.step) cls += ' is-done';
+      const currentAttr = s.num === state.step ? ' aria-current="step"' : '';
+      return `
+        <li>
+          <button type="button" class="${cls}" data-step="${s.num}" aria-label="Step ${s.num}: ${escapeHtml(s.short)}"${currentAttr}>${s.num}</button>
+        </li>`;
+    }).join('');
+  }
+
+  // 2. Nav buttons (desktop + mobile dock) and contextual controls
   document.getElementById('btn-back').disabled = state.step === 1;
   document.getElementById('btn-next').disabled = state.step === 6;
+  const btnBackMobile = document.getElementById('btn-back-mobile');
+  const btnNextMobile = document.getElementById('btn-next-mobile');
+  if (btnBackMobile) btnBackMobile.disabled = state.step === 1;
+  if (btnNextMobile) btnNextMobile.disabled = state.step === 6;
 
   const isShareStep = state.step >= 3 && state.step <= 5;
   document.getElementById('btn-randomise').classList.toggle('hidden', !isShareStep);
@@ -1176,40 +1195,6 @@ function insideHorizontalScroller(el) {
   return Boolean(scroller && scroller.scrollWidth > scroller.clientWidth + 1);
 }
 
-function initSwipe() {
-  let start = null;
-
-  document.addEventListener('touchstart', (event) => {
-    if (event.touches.length !== 1) { start = null; return; }
-    const target = event.target;
-    if (
-      isTypingTarget(target) ||
-      (target.closest && target.closest('input, textarea, select, .help-pop')) ||
-      insideHorizontalScroller(target)
-    ) {
-      start = null;
-      return;
-    }
-    const t = event.touches[0];
-    start = { x: t.clientX, y: t.clientY, time: Date.now() };
-  }, { passive: true });
-
-  document.addEventListener('touchend', (event) => {
-    if (!start) return;
-    const t = event.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    const elapsed = Date.now() - start.time;
-    start = null;
-    if (elapsed > 900) return;
-    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      goToStep(dx < 0 ? state.step + 1 : state.step - 1);
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchcancel', () => { start = null; }, { passive: true });
-}
-
 function initHelp() {
   const btn = document.getElementById('btn-help');
   const pop = document.getElementById('help-pop');
@@ -1228,6 +1213,20 @@ function initHelp() {
 function initEvents() {
   document.getElementById('btn-back').addEventListener('click', () => goToStep(state.step - 1));
   document.getElementById('btn-next').addEventListener('click', () => goToStep(state.step + 1));
+
+  const btnBackMobile = document.getElementById('btn-back-mobile');
+  const btnNextMobile = document.getElementById('btn-next-mobile');
+  if (btnBackMobile) btnBackMobile.addEventListener('click', () => goToStep(state.step - 1));
+  if (btnNextMobile) btnNextMobile.addEventListener('click', () => goToStep(state.step + 1));
+
+  const mobileSteps = document.getElementById('mobile-steps');
+  if (mobileSteps) {
+    mobileSteps.addEventListener('click', (event) => {
+      const btn = event.target.closest('button[data-step]');
+      if (!btn) return;
+      goToStep(Number(btn.dataset.step));
+    });
+  }
 
   document.getElementById('btn-reset').addEventListener('click', () => {
     const direction = state.step === 1 ? 0 : -1;
@@ -1315,7 +1314,6 @@ function initEvents() {
   });
 
   initHelp();
-  initSwipe();
 }
 
 if (typeof document !== 'undefined') {

@@ -53,7 +53,6 @@
       </div>
       <span class="nav-hint" aria-hidden="true">
         <span class="hint-keys"><kbd>←</kbd> <kbd>→</kbd> to move, <kbd>?</kbd> to explain</span>
-        <span class="hint-touch">Swipe to move</span>
       </span>
 
       <div id="help-pop" class="help-pop" role="dialog" aria-modal="false" aria-labelledby="help-title">
@@ -69,6 +68,15 @@
 
     <main id="stage" class="stage"></main>
   </div>
+
+  <!-- Mobile bottom dock: steps 1..6 + Back / Next -->
+  <nav class="mobile-dock" aria-label="Step navigation">
+    <ol class="mobile-steps" id="mobile-steps"></ol>
+    <div class="mobile-nav">
+      <button type="button" id="btn-back-mobile" class="btn btn-secondary">← Back</button>
+      <button type="button" id="btn-next-mobile" class="btn btn-primary">Next →</button>
+    </div>
+  </nav>
 
   <script src="app.js"></script>
 </body>
