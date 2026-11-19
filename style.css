@@ -214,6 +214,7 @@ body {
   border: 1px solid transparent;
   cursor: pointer;
   line-height: 1.2;
+  touch-action: manipulation;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
@@ -477,6 +478,8 @@ body {
 .table-wrap {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 table {
@@ -694,7 +697,7 @@ tr.is-extra-row td {
 }
 
 /* --------------------------------------------------------------------------
-   Responsive Breakpoints
+   Responsive Breakpoints (Tablet & Mobile)
    -------------------------------------------------------------------------- */
 @media (max-width: 960px) {
   .two-col {
@@ -706,23 +709,137 @@ tr.is-extra-row td {
   }
 }
 
-@media (max-width: 560px) {
-  .page-shell {
-    padding: 0.6rem 0.65rem;
+@media (max-width: 640px) {
+  html {
+    font-size: 15px;
   }
 
+  .page-shell {
+    padding: 0.65rem 0.7rem 1rem;
+    gap: 0.55rem;
+  }
+
+  .top-bar {
+    gap: 0.5rem;
+  }
+
+  .top-bar h1 {
+    font-size: 1.25rem;
+  }
+
+  /* Single-row horizontal scrollable stepper on phones (saves vertical space) */
   .stepper {
     min-width: 0;
     width: 100%;
   }
 
   .stepper-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.35rem;
+    padding-bottom: 2px;
+  }
+
+  .stepper-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stepper-list li {
+    flex: 0 0 auto;
+  }
+
+  .step-btn {
+    padding: 0.48rem 0.65rem;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  /* Thumb-friendly controls on mobile */
+  .controls-bar {
+    padding: 0.55rem;
+    gap: 0.5rem;
+  }
+
+  .nav-buttons {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.45rem;
+  }
+
+  .nav-buttons .btn {
+    min-height: 44px;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .option-controls {
+    width: 100%;
+    gap: 0.4rem;
+  }
+
+  .option-controls .btn,
+  .option-controls .toggle-label {
+    min-height: 40px;
+    font-size: 0.88rem;
+    padding: 0.42rem 0.7rem;
+  }
+
+  /* Stack caption bullets cleanly */
+  .caption-box {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .caption-bullets {
+    flex-direction: column;
+    gap: 0.22rem;
+    font-size: 0.92rem;
+  }
+
+  .flow-strip {
+    justify-content: flex-start;
+    font-size: 0.82rem;
+    padding: 0.35rem 0.55rem;
+    gap: 0.3rem;
+  }
+
+  /* Prevent iOS Safari zoom on input focus (>= 16px) & keep cells legible */
+  .cell-input {
+    font-size: 16px;
+    min-height: 38px;
+    min-width: 105px;
+    padding: 0.3rem 0.45rem;
+  }
+
+  .cell-input-id {
+    min-width: 74px;
+  }
+
+  .cell-input-num {
+    min-width: 64px;
+  }
+
+  .panel-header {
+    padding: 0.5rem 0.7rem;
+  }
+
+  .panel-body {
+    padding: 0.45rem 0.55rem;
   }
 
   th,
   td {
-    padding: 0.34rem 0.36rem;
-    font-size: 0.85rem;
+    padding: 0.38rem 0.4rem;
+    font-size: 0.88rem;
+  }
+
+  .share-chip {
+    min-width: 1.75rem;
+    font-size: 0.88rem;
   }
 }

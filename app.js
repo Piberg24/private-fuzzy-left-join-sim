@@ -1284,6 +1284,12 @@ function render() {
   }
 
   state.flashShares = false;
+
+  // Keep the active step pill visible in the horizontal mobile stepper
+  const activePill = document.querySelector('#stepper-list button.is-current');
+  if (activePill && activePill.scrollIntoView) {
+    activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
 /* --------------------------------------------------------------------------
