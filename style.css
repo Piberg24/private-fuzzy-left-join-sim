@@ -784,22 +784,22 @@ body {
 }
 
 .panel-header {
-  padding: 0.45rem 0.7rem 0.38rem;
+  padding: 0.34rem 0.58rem 0.28rem;
   background-color: var(--light-sand);
   border-bottom: 1px solid var(--sand);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.25rem 0.65rem;
+  gap: 0.2rem 0.55rem;
 }
 
 .panel-title {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.94rem;
+  gap: 0.4rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text);
 }
@@ -808,11 +808,11 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 6px;
+  width: 1.28rem;
+  height: 1.28rem;
+  border-radius: 5px;
   color: var(--white);
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 700;
   flex-shrink: 0;
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15);
@@ -834,28 +834,28 @@ body {
 }
 
 .party-logo-hospital {
-  width: 1.45rem;
-  height: 1.45rem;
-  border-radius: 6px;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 5px;
   background-color: var(--green-soft);
   border: 1px solid rgba(0, 128, 47, 0.3);
   color: var(--green);
 }
 
 .party-logo-hsg {
-  height: 1.35rem;
+  height: 1.18rem;
   width: auto;
   display: block;
   object-fit: contain;
 }
 
 .panel-role {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .panel-body {
-  padding: 0.38rem 0.6rem 0.48rem;
+  padding: 0.24rem 0.48rem 0.34rem;
   flex: 1;
 }
 
@@ -887,19 +887,19 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.86rem;
+  font-size: 0.8rem;
 }
 
 th,
 td {
-  padding: 0.3rem 0.42rem;
+  padding: 0.2rem 0.32rem;
   text-align: left;
   border-bottom: 1px solid var(--light-sand);
   vertical-align: middle;
 }
 
 th {
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -932,14 +932,14 @@ tr.is-extra-row td {
 
 .cell-input {
   width: 100%;
-  min-width: 62px;
+  min-width: 56px;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text);
   background-color: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.2rem 0.38rem;
+  padding: 0.14rem 0.3rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -991,9 +991,9 @@ tr.is-extra-row td {
 
 .feature-val {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   display: inline-block;
-  padding: 0.14rem 0.42rem;
+  padding: 0.08rem 0.3rem;
   background-color: var(--light-sand);
   border: 1px solid var(--sand);
   border-radius: var(--radius-sm);
@@ -1002,9 +1002,9 @@ tr.is-extra-row td {
 
 .badge {
   display: inline-block;
-  padding: 0.14rem 0.55rem;
+  padding: 0.08rem 0.42rem;
   border-radius: 999px;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -1038,12 +1038,12 @@ tr.is-extra-row td {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.75rem;
-  height: 1.58rem;
-  padding: 0 0.38rem;
-  border-radius: 6px;
+  min-width: 1.5rem;
+  height: 1.38rem;
+  padding: 0 0.28rem;
+  border-radius: 5px;
   font-family: var(--font-mono);
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   background: linear-gradient(180deg, var(--white), var(--light-sand));
@@ -1292,43 +1292,47 @@ tr.is-extra-row td {
     gap: 0.25rem;
   }
 
-  /* 16px stops iOS Safari from zooming into inputs, kept compact */
+  /* Compact inputs & tables on mobile */
+  .two-col {
+    gap: 0.5rem;
+  }
+
   .cell-input {
-    font-size: 16px;
-    min-height: 34px;
-    min-width: 96px;
-    padding: 0.2rem 0.4rem;
+    font-size: 15px;
+    min-height: 28px;
+    min-width: 86px;
+    padding: 0.14rem 0.32rem;
   }
 
   .cell-input-id {
-    min-width: 68px;
+    min-width: 62px;
   }
 
   .cell-input-num {
-    min-width: 58px;
+    min-width: 52px;
   }
 
   .panel-header {
-    padding: 0.42rem 0.6rem 0.36rem;
+    padding: 0.32rem 0.5rem 0.26rem;
   }
 
   .panel-body {
-    padding: 0.32rem 0.45rem 0.42rem;
+    padding: 0.2rem 0.36rem 0.28rem;
   }
 
   th,
   td {
-    padding: 0.28rem 0.34rem;
-    font-size: 0.83rem;
+    padding: 0.18rem 0.28rem;
+    font-size: 0.78rem;
   }
 
   th {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
   }
 
   .share-chip {
-    min-width: 1.7rem;
-    height: 1.55rem;
-    font-size: 0.84rem;
+    min-width: 1.48rem;
+    height: 1.36rem;
+    font-size: 0.78rem;
   }
 }
