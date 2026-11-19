@@ -524,19 +524,14 @@ const HOSPITAL_LOGO_SVG =
 const HSG_LOGO_HTML =
   '<img src="hsg-mark.png" alt="HSG" class="party-logo party-logo-hsg">';
 
-/** Panel header with Hospital / HSG icon and (Sender S) / (Receiver R). */
+/** Panel header with Hospital / HSG icon. */
 function panelHead(party, title, role, id) {
   const logo = party === 'S' ? HOSPITAL_LOGO_SVG : party === 'R' ? HSG_LOGO_HTML : '';
-  const paren = party === 'S'
-    ? ' <span class="party-paren">(Sender S)</span>'
-    : party === 'R'
-      ? ' <span class="party-paren">(Receiver R)</span>'
-      : '';
   const idAttr = id ? ` id="${id}"` : '';
   const roleHtml = role ? `<span class="panel-role">${role}</span>` : '';
   return `
     <div class="panel-header">
-      <h3 class="panel-title"${idAttr}>${logo}<span>${title}${paren}</span></h3>
+      <h3 class="panel-title"${idAttr}>${logo}<span>${title}</span></h3>
       ${roleHtml}
     </div>`;
 }
@@ -612,11 +607,11 @@ function renderStep1() {
   return `
     <div class="two-col">
       ${panelHtml('panel-s',
-        panelHead('S', 'Hospital St. Gallen', 'Patients and admissions. Click to edit.', 'panel-s-title'),
+        panelHead('S', 'Hospital St. Gallen <span class="party-paren">(Sender S)</span>', '', 'panel-s-title'),
         tableHtml(['Name', 'Birth date', 'ZIP', 'Admissions'], sBody),
         ' aria-labelledby="panel-s-title"')}
       ${panelHtml('panel-r',
-        panelHead('R', 'HSG research team', 'Study participants. Click to edit.', 'panel-r-title'),
+        panelHead('R', 'HSG research team <span class="party-paren">(Receiver R)</span>', '', 'panel-r-title'),
         tableHtml(['Study ID', 'Name', 'Birth date', 'ZIP'], rBody),
         ' aria-labelledby="panel-r-title"')}
     </div>
@@ -651,9 +646,9 @@ function renderStep2() {
 
   return `
     <div class="two-col">
-      ${panelHtml('panel-s', panelHead('S', 'Keys built by S', modeBadge),
+      ${panelHtml('panel-s', panelHead('S', 'Keys built by S', state.usePhonetic ? 'Phonetic' : ''),
         tableHtml(['Patient', ...FEATURE_HEADERS], sBody))}
-      ${panelHtml('panel-r', panelHead('R', 'Keys built by R', modeBadge),
+      ${panelHtml('panel-r', panelHead('R', 'Keys built by R', state.usePhonetic ? 'Phonetic' : ''),
         tableHtml(['ID', ...FEATURE_HEADERS], rBody))}
     </div>
   `;
@@ -729,9 +724,9 @@ function renderStep3() {
       { text: 'Next: keep 1 winner' }
     ])}
     <div class="two-col">
-      ${panelHtml('panel-s', panelHead('S', 'What S sees', "Share slots for R's rows (order in S does not matter)."),
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', "R's slots"),
         tableHtml(['Slot', 's for f1', 's for f2', 's for f3'], sBody))}
-      ${panelHtml('panel-r', panelHead('R', 'What R sees', 'Random bits only. Alone they mean nothing.'),
+      ${panelHtml('panel-r', panelHead('R', 'What R sees', ''),
         tableHtml(['Study ID', 'r for f1', 'r for f2', 'r for f3'], rBody))}
     </div>
     ${teacherPanel}
@@ -810,9 +805,9 @@ function renderStep4() {
       { text: 'At most 1 partner' }
     ])}
     <div class="two-col">
-      ${panelHtml('panel-s', panelHead('S', 'What S sees', 'Fresh random bits. The winner stays hidden.'),
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', ''),
         tableHtml(['Slot', 'Winner? (f1, f2, f3)', 'Match?'], sBody))}
-      ${panelHtml('panel-r', panelHead('R', 'What R sees', 'Fresh random bits. The winner stays hidden.'),
+      ${panelHtml('panel-r', panelHead('R', 'What R sees', ''),
         tableHtml(['Study ID', 'Winner? (f1, f2, f3)', 'Match?'], rBody))}
     </div>
     ${teacherPanel}
@@ -879,9 +874,9 @@ function renderStep5() {
       { text: 'Step 6 unlocks' }
     ])}
     <div class="two-col">
-      ${panelHtml('panel-s', panelHead('S', 'What S sees', "Looks like noise. Match or dummy? S can't tell."),
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', ''),
         tableHtml(['Slot', 'Match?', 'Admissions'], sBody))}
-      ${panelHtml('panel-r', panelHead('R', 'What R sees', "Looks like noise. Match or dummy? R can't tell yet."),
+      ${panelHtml('panel-r', panelHead('R', 'What R sees', ''),
         tableHtml(['Study ID', 'Match?', 'Admissions'], rBody))}
     </div>
     ${teacherPanel}
@@ -963,12 +958,12 @@ function renderStep6() {
 
   return `
     <div class="two-col">
-      ${panelHtml('panel-s', panelHead('S', 'What S learns', 'Nothing'), sLearns)}
-      ${panelHtml('panel-r', panelHead('R', 'What R learns', 'Its joined table, from s ⊕ r'),
+      ${panelHtml('panel-s', panelHead('S', 'What S learns', ''), sLearns)}
+      ${panelHtml('panel-r', panelHead('R', 'What R learns', 's ⊕ r'),
         tableHtml(['Study ID', 'Participant', 's ⊕ r', 'Result'], joinedBody))}
     </div>
     ${panelHtml('panel-summary',
-      panelHead(null, 'Which key decided each match?', 'Demo only. The real protocol keeps this hidden.'),
+      panelHead(null, 'Deciding key', ''),
       tableHtml(['Study ID', 'Deciding key', 'Matched S record', 'Note'], featureSummaryBody),
       ' aria-label="Deciding key summary"')}
   `;
