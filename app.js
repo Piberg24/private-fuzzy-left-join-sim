@@ -522,19 +522,21 @@ const HOSPITAL_LOGO_SVG =
   '</svg></span>';
 
 const HSG_LOGO_HTML =
-  '<img src="hsg-logo.png" alt="University of St.Gallen" class="party-logo party-logo-hsg">';
+  '<img src="hsg-mark.png" alt="HSG" class="party-logo party-logo-hsg">';
 
-/** Panel header with S / R tag and Hospital / HSG logo. */
+/** Panel header with Hospital / HSG icon and (Sender S) / (Receiver R). */
 function panelHead(party, title, role, id) {
-  const tag = party
-    ? `<span class="party-tag party-tag-${party.toLowerCase()}" aria-hidden="true">${party}</span>`
-    : '';
   const logo = party === 'S' ? HOSPITAL_LOGO_SVG : party === 'R' ? HSG_LOGO_HTML : '';
+  const paren = party === 'S'
+    ? ' <span class="party-paren">(Sender S)</span>'
+    : party === 'R'
+      ? ' <span class="party-paren">(Receiver R)</span>'
+      : '';
   const idAttr = id ? ` id="${id}"` : '';
   const roleHtml = role ? `<span class="panel-role">${role}</span>` : '';
   return `
     <div class="panel-header">
-      <h3 class="panel-title"${idAttr}>${tag}${logo}<span>${title}</span></h3>
+      <h3 class="panel-title"${idAttr}>${logo}<span>${title}${paren}</span></h3>
       ${roleHtml}
     </div>`;
 }
