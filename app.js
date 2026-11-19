@@ -1,18 +1,19 @@
 /* ==========================================================================
-   Private Fuzzy Left Join — Didactic Simulator (app.js)
+   Private Fuzzy Left Join: didactic simulator (app.js)
    Concept: Han, Kim, Son, "Private Computation on Common Fuzzy Records", PoPETs 2025.
 
    Structure:
-     1. Scenario defaults & metadata
+     1. Scenario defaults and metadata
      2. Pure functions: normalisation, phonetic key, features, shares, Circuit-PSI, OTO MPC, payload
      3. Application state
-     4. Rendering (Steps 1–6) & event wiring
+     4. Rendering (Steps 1 to 6)
+     5. Event wiring (buttons, keyboard, swipe, help popup)
    ========================================================================== */
 
 'use strict';
 
 /* --------------------------------------------------------------------------
-   1. Scenario Defaults & Metadata
+   1. Scenario Defaults and Metadata
    -------------------------------------------------------------------------- */
 
 const DEFAULT_R = [
@@ -28,8 +29,8 @@ const DEFAULT_S = [
 ];
 
 // Second candidate for the "Ordered" demo:
-// - With phonetic key OFF: matches P-017 on f2 (earlier than Anna Müller's f3) -> f2 wins (7).
-// - With phonetic key ON:  Anna Müller matches P-017 on f1, this row on f2 (later) -> f1 wins (2).
+// - Phonetic key OFF: matches P-017 on f2 (earlier than Anna Müller's f3), so f2 wins (7).
+// - Phonetic key ON:  Anna Müller matches P-017 on f1, this row on f2 (later), so f1 wins (2).
 const EXTRA_CANDIDATE_S = {
   id: 'S-4',
   name: 'Anna Mueller',
@@ -45,71 +46,82 @@ const FEATURES = [
   { key: 'f3', label: 'f3', desc: 'birth date + ZIP' }
 ];
 
+// Copy for the "?" popup. Short, plain, one idea per line.
 const STEP_META = [
   {
     num: 1,
     short: 'Inputs',
-    title: '1/6 · Inputs',
+    heading: 'Two tables, no shared ID',
+    title: '1/6: Inputs',
     bullets: [
-      "2 separate tables (neither side sees the other's data)",
-      'HSG wants hospital admissions for its study',
-      'Dirty real-life data: typos, missing dates, no shared ID'
+      "Hospital S and research team R each keep their own table. Neither sees the other's.",
+      'R wants the admission count of its study participants.',
+      'The data is messy: a typo here, a missing birth date there.',
+      'Edit any cell to try your own case.'
     ]
   },
   {
     num: 2,
     short: 'Features',
-    title: '2/6 · Features',
+    heading: 'Each side builds 3 match keys',
+    title: '2/6: Features',
     bullets: [
-      'Each side builds 3 ordered keys locally (f1 strongest, f3 weakest)',
-      'Empty fields break every key that needs them',
-      'Nothing leaves either table yet'
+      'Both sides combine their own fields into 3 keys, f1, f2 and f3.',
+      'f1 is the strictest key. f3 is the loosest.',
+      'An empty field breaks every key that needs it.',
+      'Nothing has left either side yet.'
     ]
   },
   {
     num: 3,
     short: 'Circuit-PSI',
-    title: '3/6 · Circuit-PSI',
+    heading: 'Is this key in the other table?',
+    title: '3/6: Circuit-PSI',
     bullets: [
-      'Test f1, f2, and f3 one by one: is this key in S?',
-      'Each yes/no bit b is split into two shares (s ⊕ r = b)',
-      'One person can still hit more than one feature'
+      "For every R row, each key gets a yes or no: does S have the same key?",
+      'Nobody sees that answer. It is split into two random bits, s for S and r for R.',
+      'Only both together give the answer: s ⊕ r = b (⊕ is XOR).',
+      'One person can get a yes on more than one key.'
     ]
   },
   {
     num: 4,
     short: 'Pick 1 (OTO)',
-    title: '4/6 · MPC (OTO)',
+    heading: 'Keep only the first yes',
+    title: '4/6: MPC (OTO)',
     bullets: [
-      'Step 3 gave 3 separate answers per person',
-      'MPC keeps only the first yes (f1 → f2 → f3) and drops the rest',
-      'Both sides get fresh shares (computed centrally in this demo)'
+      'Step 3 can give up to 3 yeses per person. A join needs exactly one partner.',
+      'The rule is simple. f1 beats f2, f2 beats f3. Everything after the first yes is dropped.',
+      'The result is again split into fresh random bits.',
+      'Here one program does the maths. In the real protocol S and R compute it together.'
     ]
   },
   {
     num: 5,
     short: 'Payload',
-    title: '5/6 · Payload',
+    heading: 'Lock the admission count',
+    title: '5/6: Payload',
     bullets: [
-      'Each row gets a locked admissions count split into two shares (s ⊕ r)',
-      'Unmatched rows get a random dummy number instead',
-      'Both look like random numbers, so neither side knows who matched'
+      'A matched row gets its admission count, split into two random numbers.',
+      'A row without a match gets a random dummy instead.',
+      'Both look like noise. Neither side can tell a match from a dummy.'
     ]
   },
   {
     num: 6,
     short: 'Output',
-    title: '6/6 · Output',
+    heading: 'R unlocks the result',
+    title: '6/6: Output',
     bullets: [
-      'S sends its shares to R, and R computes s ⊕ r',
-      'Match = 1 reveals admissions, Match = 0 discards the dummy',
-      'S learns nothing about R or which patients matched'
+      'S sends its numbers to R. R combines them with its own: s ⊕ r.',
+      'Match = 1 means R reads the admission count. Match = 0 means R drops the dummy.',
+      'S learns nothing, not even how many people matched.'
     ]
   }
 ];
 
 /* --------------------------------------------------------------------------
-   2. Pure Functions (Normalisation, Features, Shares, Circuit-PSI, OTO, Payload)
+   2. Pure Functions
    -------------------------------------------------------------------------- */
 
 function cloneRows(rows) {
@@ -293,7 +305,7 @@ function computeCircuitPsi(rFeatures, sFeatures) {
 
 /**
  * Step 4: MPC on the shares (Ordered Threshold-One rule).
- * Earliest agreeing feature wins (f1 < f2 < f3); at most one S record is chosen.
+ * Earliest agreeing feature wins (f1 < f2 < f3). At most one S record is chosen.
  * Produces fresh XOR shares for the selection bits (w1, w2, w3) and combined match bit m.
  */
 function computeOtoMpc(psiRows) {
@@ -407,7 +419,7 @@ function runSimulation(rRows, sRows, usePhonetic) {
 }
 
 /**
- * Redraw all random shares (Steps 3–5) while keeping the underlying true bits unchanged.
+ * Redraw all random shares (Steps 3 to 5) while keeping the underlying true bits unchanged.
  */
 function rerandomiseSimulationShares(sim, sRows) {
   const psiRows = sim.psiRows.map((psi) => {
@@ -459,8 +471,9 @@ const state = {
 
 state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
 
+
 /* --------------------------------------------------------------------------
-   4. Rendering Helpers & Step Views
+   4. Rendering Helpers and Step Views
    -------------------------------------------------------------------------- */
 
 function escapeHtml(str) {
@@ -478,7 +491,7 @@ function formatAdmissions(n) {
 
 function formatFeatureCell(val, missingLabel) {
   if (val === null) {
-    return `<span class="badge badge-unusable">— unusable (${escapeHtml(missingLabel)})</span>`;
+    return `<span class="badge badge-unusable">${escapeHtml(missingLabel)}</span>`;
   }
   return `<span class="feature-val">${escapeHtml(val)}</span>`;
 }
@@ -491,7 +504,7 @@ function missingReason(record, featureKey) {
   if ((featureKey === 'f1' || featureKey === 'f2') && noName) missing.push('name');
   if ((featureKey === 'f1' || featureKey === 'f3') && noBirth) missing.push('birth date');
   if ((featureKey === 'f2' || featureKey === 'f3') && noZip) missing.push('ZIP');
-  return missing.length ? `missing ${missing.join(' & ')}` : 'empty';
+  return missing.length ? `no ${missing.join(' or ')}` : 'empty';
 }
 
 function shareChip(val, wide) {
@@ -501,194 +514,143 @@ function shareChip(val, wide) {
   return `<span class="${cls.join(' ')}">${escapeHtml(val)}</span>`;
 }
 
-/* --- Step 1: Inputs (editable tables; S left, R right) --- */
+/** Panel header with an S / R tag so the two parties are told apart at a glance. */
+function panelHead(party, title, role, id) {
+  const tag = party
+    ? `<span class="party-tag party-tag-${party.toLowerCase()}" aria-hidden="true">${party}</span>`
+    : '';
+  const idAttr = id ? ` id="${id}"` : '';
+  const roleHtml = role ? `<span class="panel-role">${role}</span>` : '';
+  return `
+    <div class="panel-header">
+      <h3 class="panel-title"${idAttr}>${tag}<span>${title}</span></h3>
+      ${roleHtml}
+    </div>`;
+}
+
+function tableHtml(headers, body) {
+  const head = headers.map((h) => `<th>${h}</th>`).join('');
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>${head}</tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
+}
+
+function panelHtml(cls, head, inner, extraAttrs) {
+  return `
+    <section class="panel ${cls}"${extraAttrs || ''}>
+      ${head}
+      <div class="panel-body">${inner}</div>
+    </section>`;
+}
+
+function flowStrip(items) {
+  const parts = items.map((item, i) => {
+    const pill = `<span class="flow-pill${item.focus ? ' is-focus' : ''}">${item.text}</span>`;
+    return i === 0 ? pill : `<span class="flow-arrow">→</span>${pill}`;
+  });
+  return `<div class="flow-strip" aria-hidden="true">${parts.join('')}</div>`;
+}
+
+const FEATURE_HEADERS = ['f1 (name + birth)', 'f2 (name + ZIP)', 'f3 (birth + ZIP)'];
+
+/* --- Step 1: Inputs (editable tables, S left, R right) --- */
 function renderStep1() {
+  const cell = (party, idx, field, value, label, extraCls) => {
+    const empty = field !== 'admissions' && !normaliseText(value) ? ' is-empty' : '';
+    const numAttrs = field === 'admissions' ? ' inputmode="numeric" pattern="[0-9]*"' : '';
+    const placeholder = field === 'admissions' ? '' : ' placeholder="(empty)"';
+    return `<input type="text" class="cell-input${extraCls || ''}${empty}"${numAttrs}
+              data-party="${party}" data-index="${idx}" data-field="${field}"
+              value="${escapeHtml(value)}"${placeholder} aria-label="${escapeHtml(label)}">`;
+  };
+
   const sBody = state.sRows
     .map((row, idx) => {
       const extraClass = row.isExtra ? ' class="is-extra-row"' : '';
       const extraBadge = row.isExtra ? '<span class="badge badge-extra">2nd</span>' : '';
-      const nameEmpty = !normaliseText(row.name) ? ' is-empty' : '';
-      const birthEmpty = !normaliseText(row.birth) ? ' is-empty' : '';
-      const zipEmpty = !normaliseText(row.zip) ? ' is-empty' : '';
+      const who = `S row ${idx + 1}`;
       return `
         <tr${extraClass}>
-          <td>
-            <input type="text" class="cell-input${nameEmpty}" data-party="S" data-index="${idx}" data-field="name"
-                   value="${escapeHtml(row.name)}" placeholder="(empty)" aria-label="S row ${idx + 1} name">
-            ${extraBadge}
-          </td>
-          <td>
-            <input type="text" class="cell-input${birthEmpty}" data-party="S" data-index="${idx}" data-field="birth"
-                   value="${escapeHtml(row.birth)}" placeholder="(empty)" aria-label="S row ${idx + 1} birth date">
-          </td>
-          <td>
-            <input type="text" class="cell-input${zipEmpty}" data-party="S" data-index="${idx}" data-field="zip"
-                   value="${escapeHtml(row.zip)}" placeholder="(empty)" aria-label="S row ${idx + 1} ZIP">
-          </td>
-          <td>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" class="cell-input cell-input-num"
-                   data-party="S" data-index="${idx}" data-field="admissions"
-                   value="${escapeHtml(row.admissions)}" aria-label="S row ${idx + 1} admissions payload">
-          </td>
+          <td><div class="cell-with-badge">${cell('S', idx, 'name', row.name, `${who} name`)}${extraBadge}</div></td>
+          <td>${cell('S', idx, 'birth', row.birth, `${who} birth date`)}</td>
+          <td>${cell('S', idx, 'zip', row.zip, `${who} ZIP`)}</td>
+          <td>${cell('S', idx, 'admissions', row.admissions, `${who} admissions`, ' cell-input-num')}</td>
         </tr>`;
     })
     .join('');
 
   const rBody = state.rRows
     .map((row, idx) => {
-      const idEmpty = !normaliseText(row.id) ? ' is-empty' : '';
-      const birthEmpty = !normaliseText(row.birth) ? ' is-empty' : '';
-      const nameEmpty = !normaliseText(row.name) ? ' is-empty' : '';
-      const zipEmpty = !normaliseText(row.zip) ? ' is-empty' : '';
+      const who = `R row ${row.id || idx + 1}`;
       return `
         <tr>
-          <td>
-            <input type="text" class="cell-input cell-input-id${idEmpty}" data-party="R" data-index="${idx}" data-field="id"
-                   value="${escapeHtml(row.id)}" placeholder="(empty)" aria-label="R row ${idx + 1} study ID">
-          </td>
-          <td>
-            <input type="text" class="cell-input${nameEmpty}" data-party="R" data-index="${idx}" data-field="name"
-                   value="${escapeHtml(row.name)}" placeholder="(empty)" aria-label="R row ${escapeHtml(row.id || String(idx + 1))} name">
-          </td>
-          <td>
-            <input type="text" class="cell-input${birthEmpty}" data-party="R" data-index="${idx}" data-field="birth"
-                   value="${escapeHtml(row.birth)}" placeholder="(empty)" aria-label="R row ${escapeHtml(row.id || String(idx + 1))} birth date">
-          </td>
-          <td>
-            <input type="text" class="cell-input${zipEmpty}" data-party="R" data-index="${idx}" data-field="zip"
-                   value="${escapeHtml(row.zip)}" placeholder="(empty)" aria-label="R row ${escapeHtml(row.id || String(idx + 1))} ZIP">
-          </td>
+          <td>${cell('R', idx, 'id', row.id, `R row ${idx + 1} study ID`, ' cell-input-id')}</td>
+          <td>${cell('R', idx, 'name', row.name, `${who} name`)}</td>
+          <td>${cell('R', idx, 'birth', row.birth, `${who} birth date`)}</td>
+          <td>${cell('R', idx, 'zip', row.zip, `${who} ZIP`)}</td>
         </tr>`;
     })
     .join('');
 
   return `
     <div class="two-col">
-      <section class="panel panel-s" aria-labelledby="panel-s-title">
-        <div class="panel-header">
-          <h2 class="panel-title" id="panel-s-title">Sender S · Hospital St. Gallen</h2>
-          <span class="panel-role">Patients + payload (editable)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Birth date</th>
-                  <th>ZIP</th>
-                  <th>Admissions</th>
-                </tr>
-              </thead>
-              <tbody>${sBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel panel-r" aria-labelledby="panel-r-title">
-        <div class="panel-header">
-          <h2 class="panel-title" id="panel-r-title">Receiver R · HSG research team</h2>
-          <span class="panel-role">Study participants (editable)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Study ID</th>
-                  <th>Name</th>
-                  <th>Birth date</th>
-                  <th>ZIP</th>
-                </tr>
-              </thead>
-              <tbody>${rBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      ${panelHtml('panel-s',
+        panelHead('S', 'Hospital St. Gallen', 'Patients and admissions. Click to edit.', 'panel-s-title'),
+        tableHtml(['Name', 'Birth date', 'ZIP', 'Admissions'], sBody),
+        ' aria-labelledby="panel-s-title"')}
+      ${panelHtml('panel-r',
+        panelHead('R', 'HSG research team', 'Study participants. Click to edit.', 'panel-r-title'),
+        tableHtml(['Study ID', 'Name', 'Birth date', 'ZIP'], rBody),
+        ' aria-labelledby="panel-r-title"')}
     </div>
   `;
 }
 
 /* --- Step 2: Features (S left, R right) --- */
 function renderStep2() {
-  const modeBadge = state.usePhonetic ? 'Phonetic key ON (ü/ue → u)' : 'Plain lowercase';
+  const modeBadge = state.usePhonetic ? 'Phonetic names (ü and ue count as u)' : 'Names compared letter by letter';
+  const featureCells = (row, f) => FEATURES
+    .map((feat) => `<td>${formatFeatureCell(f[feat.key], missingReason(row, feat.key))}</td>`)
+    .join('');
 
   const sBody = state.sRows
     .map((row, idx) => {
-      const f = state.sim.sFeatures[idx];
       const extraClass = row.isExtra ? ' class="is-extra-row"' : '';
       return `
         <tr${extraClass}>
           <td><strong>${escapeHtml(row.name || '(empty)')}</strong></td>
-          <td>${formatFeatureCell(f.f1, missingReason(row, 'f1'))}</td>
-          <td>${formatFeatureCell(f.f2, missingReason(row, 'f2'))}</td>
-          <td>${formatFeatureCell(f.f3, missingReason(row, 'f3'))}</td>
+          ${featureCells(row, state.sim.sFeatures[idx])}
         </tr>`;
     })
     .join('');
 
   const rBody = state.rRows
-    .map((row, idx) => {
-      const f = state.sim.rFeatures[idx];
-      return `
+    .map((row, idx) => `
         <tr>
           <td class="mono"><strong>${escapeHtml(row.id)}</strong></td>
-          <td>${formatFeatureCell(f.f1, missingReason(row, 'f1'))}</td>
-          <td>${formatFeatureCell(f.f2, missingReason(row, 'f2'))}</td>
-          <td>${formatFeatureCell(f.f3, missingReason(row, 'f3'))}</td>
-        </tr>`;
-    })
+          ${featureCells(row, state.sim.rFeatures[idx])}
+        </tr>`)
     .join('');
 
   return `
     <div class="two-col">
-      <section class="panel panel-s">
-        <div class="panel-header">
-          <h2 class="panel-title">Sender S · Local features</h2>
-          <span class="panel-role">${modeBadge}</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Patient</th>
-                  <th>f1 (name + birth)</th>
-                  <th>f2 (name + ZIP)</th>
-                  <th>f3 (birth + ZIP)</th>
-                </tr>
-              </thead>
-              <tbody>${sBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel panel-r">
-        <div class="panel-header">
-          <h2 class="panel-title">Receiver R · Local features</h2>
-          <span class="panel-role">${modeBadge}</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>f1 (name + birth)</th>
-                  <th>f2 (name + ZIP)</th>
-                  <th>f3 (birth + ZIP)</th>
-                </tr>
-              </thead>
-              <tbody>${rBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      ${panelHtml('panel-s', panelHead('S', 'Keys built by S', modeBadge),
+        tableHtml(['Patient', ...FEATURE_HEADERS], sBody))}
+      ${panelHtml('panel-r', panelHead('R', 'Keys built by R', modeBadge),
+        tableHtml(['ID', ...FEATURE_HEADERS], rBody))}
     </div>
   `;
+}
+
+function revealedPanel(title, role, headers, body) {
+  return panelHtml('panel-teacher',
+    panelHead(null, title, role),
+    tableHtml(headers, body),
+    ' aria-label="Revealed values"');
 }
 
 /* --- Step 3: Circuit-PSI per feature (S left, R right) --- */
@@ -727,8 +689,8 @@ function renderStep3() {
         const cells = FEATURES.map((f) => {
           const e = psi[f.key];
           const badge = e.trueBit
-            ? '<span class="badge badge-match">1 (yes)</span>'
-            : '<span class="badge badge-muted">0</span>';
+            ? '<span class="badge badge-match">1 yes</span>'
+            : '<span class="badge badge-muted">0 no</span>';
           return `<td class="xor-expr">${e.sShare} ⊕ ${e.rShare} = ${badge}</td>`;
         }).join('');
         return `
@@ -739,123 +701,60 @@ function renderStep3() {
       })
       .join('');
 
-    teacherPanel = `
-      <section class="panel panel-teacher" aria-label="Teacher view">
-        <div class="panel-header">
-          <h2 class="panel-title">Teacher view · True bits per feature (hidden in real protocol)</h2>
-          <span class="panel-role">s ⊕ r = b</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>R row</th>
-                  <th>f1 (name + birth)</th>
-                  <th>f2 (name + ZIP)</th>
-                  <th>f3 (birth + ZIP)</th>
-                </tr>
-              </thead>
-              <tbody>${tBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    `;
+    teacherPanel = revealedPanel(
+      'Revealed: the hidden yes/no answers',
+      'Nobody sees this in the real protocol',
+      ['R row', ...FEATURE_HEADERS],
+      tBody
+    );
   }
 
   return `
-    <div class="flow-strip" aria-hidden="true">
-      <span class="flow-pill">f1, f2, f3 tested separately</span>
-      <span class="flow-arrow">→</span>
-      <span class="flow-pill is-focus">3 locked yes/no shares per row (s ⊕ r = b)</span>
-      <span class="flow-arrow">→</span>
-      <span class="flow-pill">Next: pick only 1 winner</span>
-    </div>
+    ${flowStrip([
+      { text: 'Test f1, f2, f3 one by one' },
+      { text: 'Each answer split in two: s ⊕ r', focus: true },
+      { text: 'Next: keep 1 winner' }
+    ])}
     <div class="two-col">
-      <section class="panel panel-s">
-        <div class="panel-header">
-          <h2 class="panel-title">What S sees (Sender)</h2>
-          <span class="panel-role">Only S’s random share s ∈ {0, 1}</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Slot</th>
-                  <th>s(f1)</th>
-                  <th>s(f2)</th>
-                  <th>s(f3)</th>
-                </tr>
-              </thead>
-              <tbody>${sBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel panel-r">
-        <div class="panel-header">
-          <h2 class="panel-title">What R sees (Receiver)</h2>
-          <span class="panel-role">Only R’s random share r ∈ {0, 1}</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Study ID</th>
-                  <th>r(f1)</th>
-                  <th>r(f2)</th>
-                  <th>r(f3)</th>
-                </tr>
-              </thead>
-              <tbody>${rBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', 'Random bits only. No IDs, just slot numbers.'),
+        tableHtml(['Slot', 's for f1', 's for f2', 's for f3'], sBody))}
+      ${panelHtml('panel-r', panelHead('R', 'What R sees', 'Random bits only. Alone they mean nothing.'),
+        tableHtml(['Study ID', 'r for f1', 'r for f2', 'r for f3'], rBody))}
     </div>
     ${teacherPanel}
   `;
 }
 
-/* --- Step 4: MPC on the shares — OTO rule (S left, R right) --- */
+/* --- Step 4: MPC on the shares, OTO rule (S left, R right) --- */
 function renderStep4() {
+  const row4 = (label, shares, matchShare) => `
+        <tr>
+          <td class="mono">${label}</td>
+          <td>
+            <span class="share-group">
+              ${shareChip(shares.f1)}
+              ${shareChip(shares.f2)}
+              ${shareChip(shares.f3)}
+            </span>
+          </td>
+          <td>${shareChip(matchShare)}</td>
+        </tr>`;
+
   const sBody = state.rRows
     .map((row, idx) => {
       const oto = state.sim.otoRows[idx];
-      return `
-        <tr>
-          <td class="mono">Slot ${idx + 1}</td>
-          <td>
-            <span class="share-group">
-              ${shareChip(oto.wShares.f1.s)}
-              ${shareChip(oto.wShares.f2.s)}
-              ${shareChip(oto.wShares.f3.s)}
-            </span>
-          </td>
-          <td>${shareChip(oto.matchShares.s)}</td>
-        </tr>`;
+      return row4(`Slot ${idx + 1}`,
+        { f1: oto.wShares.f1.s, f2: oto.wShares.f2.s, f3: oto.wShares.f3.s },
+        oto.matchShares.s);
     })
     .join('');
 
   const rBody = state.rRows
     .map((row, idx) => {
       const oto = state.sim.otoRows[idx];
-      return `
-        <tr>
-          <td class="mono"><strong>${escapeHtml(row.id)}</strong></td>
-          <td>
-            <span class="share-group">
-              ${shareChip(oto.wShares.f1.r)}
-              ${shareChip(oto.wShares.f2.r)}
-              ${shareChip(oto.wShares.f3.r)}
-            </span>
-          </td>
-          <td>${shareChip(oto.matchShares.r)}</td>
-        </tr>`;
+      return row4(`<strong>${escapeHtml(row.id)}</strong>`,
+        { f1: oto.wShares.f1.r, f2: oto.wShares.f2.r, f3: oto.wShares.f3.r },
+        oto.matchShares.r);
     })
     .join('');
 
@@ -870,8 +769,8 @@ function renderStep4() {
           ? step3Hits.join(', ')
           : '<span class="badge badge-muted">none</span>';
         const afterText = oto.winningFeature
-          ? `<span class="badge badge-match">only ${oto.winningFeature} wins</span> → ${escapeHtml(state.sRows[oto.chosenSIndex].name)}`
-          : '<span class="badge badge-nomatch">no match (⊥)</span>';
+          ? `<span class="badge badge-match">${oto.winningFeature} wins</span> → ${escapeHtml(state.sRows[oto.chosenSIndex].name)}`
+          : '<span class="badge badge-nomatch">no match</span>';
         const mXor = `${oto.matchShares.s} ⊕ ${oto.matchShares.r} = ${oto.matchBit}`;
         return `
           <tr>
@@ -883,81 +782,25 @@ function renderStep4() {
       })
       .join('');
 
-    teacherPanel = `
-      <section class="panel panel-teacher" aria-label="Teacher view">
-        <div class="panel-header">
-          <h2 class="panel-title">Teacher view · Step 3 hits → Step 4 single winner</h2>
-          <span class="panel-role">At most 1 feature kept (earliest wins)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>R row</th>
-                  <th>Step 3 hits</th>
-                  <th>Step 4 OTO winner</th>
-                  <th>Match bit (s ⊕ r)</th>
-                </tr>
-              </thead>
-              <tbody>${tBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    `;
+    teacherPanel = revealedPanel(
+      'Revealed: yeses from Step 3, winner in Step 4',
+      'Only the first yes survives',
+      ['R row', 'Yes in Step 3', 'Winner', 'Match (s ⊕ r)'],
+      tBody
+    );
   }
 
   return `
-    <div class="flow-strip" aria-hidden="true">
-      <span class="flow-pill">3 shares from Step 3</span>
-      <span class="flow-arrow">→</span>
-      <span class="flow-pill is-focus">MPC keeps only first yes (f1 → f2 → f3)</span>
-      <span class="flow-arrow">→</span>
-      <span class="flow-pill">Fresh shares (at most 1 winner)</span>
-    </div>
+    ${flowStrip([
+      { text: 'Up to 3 yeses per person' },
+      { text: 'Keep the first: f1, then f2, then f3', focus: true },
+      { text: 'At most 1 partner' }
+    ])}
     <div class="two-col">
-      <section class="panel panel-s">
-        <div class="panel-header">
-          <h2 class="panel-title">What S sees (Sender)</h2>
-          <span class="panel-role">Fresh OTO shares (s side)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Slot</th>
-                  <th>Winner share (f1 · f2 · f3)</th>
-                  <th>Match? share</th>
-                </tr>
-              </thead>
-              <tbody>${sBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel panel-r">
-        <div class="panel-header">
-          <h2 class="panel-title">What R sees (Receiver)</h2>
-          <span class="panel-role">Fresh OTO shares (r side)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Study ID</th>
-                  <th>Winner share (f1 · f2 · f3)</th>
-                  <th>Match? share</th>
-                </tr>
-              </thead>
-              <tbody>${rBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', 'Fresh random bits. The winner stays hidden.'),
+        tableHtml(['Slot', 'Winner? (f1, f2, f3)', 'Match?'], sBody))}
+      ${panelHtml('panel-r', panelHead('R', 'What R sees', 'Fresh random bits. The winner stays hidden.'),
+        tableHtml(['Study ID', 'Winner? (f1, f2, f3)', 'Match?'], rBody))}
     </div>
     ${teacherPanel}
   `;
@@ -997,7 +840,7 @@ function renderStep5() {
         const recomb = p.sPayload ^ p.rPayload;
         const meaning = p.matched
           ? `<span class="badge badge-match">${escapeHtml(formatAdmissions(p.truePayload))}</span>`
-          : `<span class="badge badge-nomatch">dummy noise (${recomb}), discarded in Step 6</span>`;
+          : `<span class="badge badge-nomatch">dummy ${recomb}, dropped in Step 6</span>`;
         return `
           <tr>
             <td class="mono"><strong>${escapeHtml(row.id)}</strong></td>
@@ -1008,81 +851,25 @@ function renderStep5() {
       })
       .join('');
 
-    teacherPanel = `
-      <section class="panel panel-teacher" aria-label="Teacher view">
-        <div class="panel-header">
-          <h2 class="panel-title">Teacher view · Unlocked values (s ⊕ r)</h2>
-          <span class="panel-role">Dummy numbers hide non-matches from S</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>R row</th>
-                  <th>Match? (s ⊕ r)</th>
-                  <th>Locked value (s ⊕ r)</th>
-                  <th>Meaning</th>
-                </tr>
-              </thead>
-              <tbody>${tBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    `;
+    teacherPanel = revealedPanel(
+      'Revealed: the locked numbers',
+      'The dummies hide which rows did not match',
+      ['R row', 'Match (s ⊕ r)', 'Number (s ⊕ r)', 'Meaning'],
+      tBody
+    );
   }
 
   return `
-    <div class="flow-strip" aria-hidden="true">
-      <span class="flow-pill">Match → s ⊕ r = admissions</span>
-      <span class="flow-arrow">·</span>
-      <span class="flow-pill is-focus">No match → random dummy number (hides non-matches)</span>
-      <span class="flow-arrow">→</span>
-      <span class="flow-pill">Step 6 unlocks</span>
-    </div>
+    ${flowStrip([
+      { text: 'Match: s ⊕ r = admissions' },
+      { text: 'No match: random dummy', focus: true },
+      { text: 'Step 6 unlocks' }
+    ])}
     <div class="two-col">
-      <section class="panel panel-s">
-        <div class="panel-header">
-          <h2 class="panel-title">What S sees (Sender)</h2>
-          <span class="panel-role">Random-looking shares (cannot tell match vs. dummy)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Slot</th>
-                  <th>Match? (share)</th>
-                  <th>Admissions (locked share)</th>
-                </tr>
-              </thead>
-              <tbody>${sBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel panel-r">
-        <div class="panel-header">
-          <h2 class="panel-title">What R sees (Receiver)</h2>
-          <span class="panel-role">Random-looking shares (cannot tell match vs. dummy)</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Study ID</th>
-                  <th>Match? (share)</th>
-                  <th>Admissions (locked share)</th>
-                </tr>
-              </thead>
-              <tbody>${rBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      ${panelHtml('panel-s', panelHead('S', 'What S sees', "Looks like noise. Match or dummy? S can't tell."),
+        tableHtml(['Slot', 'Match?', 'Admissions'], sBody))}
+      ${panelHtml('panel-r', panelHead('R', 'What R sees', "Looks like noise. Match or dummy? R can't tell yet."),
+        tableHtml(['Study ID', 'Match?', 'Admissions'], rBody))}
     </div>
     ${teacherPanel}
   `;
@@ -1097,10 +884,10 @@ function renderStep6() {
       const pVal = p.sPayload ^ p.rPayload;
       const resultCell = mVal === 1
         ? `<span class="badge badge-match">${escapeHtml(formatAdmissions(pVal))}</span>`
-        : `<span class="badge badge-nomatch">no match (⊥)</span>`;
+        : '<span class="badge badge-nomatch">no match</span>';
       const xorDetail = mVal === 1
         ? `${p.sPayload} ⊕ ${p.rPayload} = ${pVal}`
-        : `Match? = 0 → discard dummy`;
+        : 'Match = 0, dummy dropped';
 
       return `
         <tr>
@@ -1115,9 +902,9 @@ function renderStep6() {
   const featureSummaryBody = state.rRows
     .map((row, idx) => {
       const oto = state.sim.otoRows[idx];
-      let decidingCell = '<span class="badge badge-nomatch">none (⊥)</span>';
-      let matchedSCell = '—';
-      let notesCell = 'No feature agreed.';
+      let decidingCell = '<span class="badge badge-nomatch">none</span>';
+      let matchedSCell = '<span class="muted">none</span>';
+      let notesCell = 'No key matched.';
 
       if (oto.winningFeature !== null && oto.chosenSIndex !== null) {
         const featMeta = FEATURES.find((f) => f.key === oto.winningFeature);
@@ -1130,15 +917,15 @@ function renderStep6() {
           const tied = oto.sameFeatureTies
             .map((sIdx) => escapeHtml(state.sRows[sIdx].name))
             .join(', ');
-          notes.push(`Tie in S on ${featMeta.label} (${tied}); first S row picked.`);
+          notes.push(`Tie on ${featMeta.label} with ${tied}. The first S row wins.`);
         }
         if (oto.beatenCandidates.length > 0) {
           const beaten = oto.beatenCandidates
             .map((c) => `${escapeHtml(state.sRows[c.sIndex].name)} (${c.feature})`)
             .join(', ');
-          notes.push(`${featMeta.label} beat later: ${beaten}.`);
+          notes.push(`${featMeta.label} beats the later hit ${beaten}.`);
         }
-        notesCell = notes.length > 0 ? notes.join(' ') : 'Earliest matching feature.';
+        notesCell = notes.length > 0 ? notes.join(' ') : 'First key that matched.';
       }
 
       return `
@@ -1151,74 +938,56 @@ function renderStep6() {
     })
     .join('');
 
+  const sLearns = `
+    <div class="s-learns-box">
+      <p class="s-learns-lead">Nothing about R or the matches.</p>
+      <ul class="s-learns-list">
+        <li>No names, birth dates or ZIP codes from R.</li>
+        <li>Not which patients matched, not even how many.</li>
+        <li>Only the table sizes are public (S has ${state.sRows.length} rows, R has ${state.rRows.length}).</li>
+      </ul>
+    </div>`;
+
   return `
     <div class="two-col">
-      <section class="panel panel-s">
-        <div class="panel-header">
-          <h2 class="panel-title">What S learns (Hospital St. Gallen)</h2>
-          <span class="panel-role">Nothing</span>
-        </div>
-        <div class="panel-body">
-          <div class="s-learns-box">
-            <p><strong>S learns nothing about R or matches.</strong></p>
-            <ul class="s-learns-list">
-              <li>Never sees R’s names, birth dates, or ZIP codes.</li>
-              <li>Never learns how many or which patients matched (e.g. whether Anna Müller matched).</li>
-              <li>Only table sizes (|S| = ${state.sRows.length}, |R| = ${state.rRows.length}) are public.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel panel-r">
-        <div class="panel-header">
-          <h2 class="panel-title">What R learns (HSG research team)</h2>
-          <span class="panel-role">Joined table via s ⊕ r</span>
-        </div>
-        <div class="panel-body">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Study ID</th>
-                  <th>Participant</th>
-                  <th>s ⊕ r</th>
-                  <th>Result</th>
-                </tr>
-              </thead>
-              <tbody>${joinedBody}</tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      ${panelHtml('panel-s', panelHead('S', 'What S learns', 'Nothing'), sLearns)}
+      ${panelHtml('panel-r', panelHead('R', 'What R learns', 'Its joined table, from s ⊕ r'),
+        tableHtml(['Study ID', 'Participant', 's ⊕ r', 'Result'], joinedBody))}
     </div>
-
-    <section class="panel panel-summary" aria-label="Deciding feature summary">
-      <div class="panel-header">
-        <h2 class="panel-title">Which feature decided each match?</h2>
-        <span class="panel-role">Didactic summary (hidden inside MPC in the real protocol)</span>
-      </div>
-      <div class="panel-body">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Study ID</th>
-                <th>Deciding feature</th>
-                <th>Matched S record</th>
-                <th>Note</th>
-              </tr>
-            </thead>
-            <tbody>${featureSummaryBody}</tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    ${panelHtml('panel-summary',
+      panelHead(null, 'Which key decided each match?', 'Demo only. The real protocol keeps this hidden.'),
+      tableHtml(['Study ID', 'Deciding key', 'Matched S record', 'Note'], featureSummaryBody),
+      ' aria-label="Deciding key summary"')}
   `;
 }
 
+/* --- Help popup --- */
+function renderHelp() {
+  const meta = STEP_META[state.step - 1];
+  document.getElementById('help-title').textContent = meta.title;
+  document.getElementById('help-list').innerHTML = meta.bullets
+    .map((line) => `<li>${escapeHtml(line)}</li>`)
+    .join('');
+}
+
+function isHelpOpen() {
+  return document.getElementById('help-pop').classList.contains('is-open');
+}
+
+function setHelpOpen(open, restoreFocus) {
+  const pop = document.getElementById('help-pop');
+  const btn = document.getElementById('btn-help');
+  if (open) renderHelp();
+  pop.classList.toggle('is-open', open);
+  btn.setAttribute('aria-expanded', String(open));
+  btn.classList.toggle('is-active', open);
+  if (!open && restoreFocus && pop.contains(document.activeElement)) {
+    btn.focus({ preventScroll: true });
+  }
+}
+
 /* --- Master Render --- */
-function render() {
+function render(direction) {
   // 1. Stepper
   const stepperList = document.getElementById('stepper-list');
   stepperList.innerHTML = STEP_META.map((s) => {
@@ -1235,7 +1004,7 @@ function render() {
       </li>`;
   }).join('');
 
-  // 2. Nav buttons & contextual controls
+  // 2. Nav buttons and contextual controls
   document.getElementById('btn-back').disabled = state.step === 1;
   document.getElementById('btn-next').disabled = state.step === 6;
 
@@ -1265,12 +1034,11 @@ function render() {
     hintEl.classList.add('hidden');
   }
 
-  // 4. Caption bullets
+  // 4. Step header and help popup content
   const meta = STEP_META[state.step - 1];
-  document.getElementById('caption-step').textContent = meta.title;
-  document.getElementById('caption-text').innerHTML = meta.bullets
-    .map((line) => `<li>${escapeHtml(line)}</li>`)
-    .join('');
+  document.getElementById('step-count').textContent = `Step ${meta.num} of 6: ${meta.short}`;
+  document.getElementById('step-title').textContent = meta.heading;
+  renderHelp();
 
   // 5. Stage content
   const stage = document.getElementById('stage');
@@ -1283,13 +1051,26 @@ function render() {
     case 6: stage.innerHTML = renderStep6(); break;
   }
 
+  // Subtle slide-in when the step changes (CSS turns it off for reduced motion)
+  if (direction) {
+    stage.classList.remove('enter-next', 'enter-prev');
+    void stage.offsetWidth; // restart the animation
+    stage.classList.add(direction > 0 ? 'enter-next' : 'enter-prev');
+  }
+
   state.flashShares = false;
 
   // Keep the active step pill visible in the horizontal mobile stepper
   const activePill = document.querySelector('#stepper-list button.is-current');
-  if (activePill && activePill.scrollIntoView) {
-    activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  if (activePill && stepperList.scrollWidth > stepperList.clientWidth) {
+    const left = activePill.offsetLeft - (stepperList.clientWidth - activePill.offsetWidth) / 2;
+    stepperList.scrollTo({ left, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   }
+}
+
+function prefersReducedMotion() {
+  return typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 /* --------------------------------------------------------------------------
@@ -1298,23 +1079,35 @@ function render() {
 
 function goToStep(stepNum, focusTarget) {
   const clamped = Math.max(1, Math.min(6, stepNum));
-  if (clamped !== state.step) {
-    const prevActive = document.activeElement;
-    state.step = clamped;
-    state.statusHint = '';
-    state.statusHintType = 'info';
-    render();
+  if (clamped === state.step) return;
 
-    // Preserve keyboard focus when stepper is rebuilt or a nav button becomes disabled/hidden
-    if (focusTarget === 'stepper') {
-      const btn = document.querySelector(`#stepper-list button[data-step="${state.step}"]`);
-      if (btn) btn.focus();
-    } else if (
-      prevActive &&
-      (prevActive.disabled || prevActive.classList.contains('hidden') || !document.body.contains(prevActive))
-    ) {
-      document.getElementById('stage').focus();
-    }
+  const prevActive = document.activeElement;
+  const direction = clamped > state.step ? 1 : -1;
+  state.step = clamped;
+  state.statusHint = '';
+  state.statusHintType = 'info';
+  render(direction);
+
+  // On a phone scrolled far down, bring the new step's top back into view
+  const stageTop = document.getElementById('stage').getBoundingClientRect().top;
+  if (stageTop < 0) {
+    window.scrollBy({ top: stageTop - 12, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }
+
+  if (focusTarget === 'stepper') {
+    // The stepper is rebuilt on render, so put focus back on the new current pill
+    const btn = document.querySelector(`#stepper-list button[data-step="${state.step}"]`);
+    if (btn) btn.focus({ preventScroll: true });
+    return;
+  }
+
+  // Only when the focused button just got disabled (Back on step 1, Next on step 6)
+  // hand focus to the other nav button. Never focus the stage itself.
+  if (prevActive && prevActive.disabled) {
+    const other = prevActive.id === 'btn-next'
+      ? document.getElementById('btn-back')
+      : document.getElementById('btn-next');
+    if (other && !other.disabled) other.focus({ preventScroll: true });
   }
 }
 
@@ -1324,7 +1117,7 @@ function buildSecondCandidateHint() {
     .find(({ oto }) => oto.beatenCandidates.length > 0 || oto.sameFeatureTies.length > 0);
 
   if (!contested) {
-    return 'Added second candidate in S (Anna Mueller, 7 admissions). Step through 1–6 to see the updated OTO match.';
+    return 'Added a 2nd Anna Mueller to S (7 admissions). Step through to see who wins.';
   }
 
   const { row, oto } = contested;
@@ -1333,9 +1126,9 @@ function buildSecondCandidateHint() {
   if (oto.beatenCandidates.length > 0) {
     const firstBeaten = oto.beatenCandidates[0];
     const loser = state.sRows[firstBeaten.sIndex];
-    return `Added second candidate in S: for ${row.id}, ${winner.name} (${winnerAdmissions}) wins via ${oto.winningFeature}, beating ${loser.name} on later ${firstBeaten.feature}.`;
+    return `2nd candidate added. For ${row.id}, ${winner.name} (${winnerAdmissions}) wins on ${oto.winningFeature}. ${loser.name} loses because its first hit, ${firstBeaten.feature}, comes later.`;
   }
-  return `Added second candidate in S: ${row.id} now has multiple S candidates on ${oto.winningFeature}; ${winner.name} (${winnerAdmissions}) is picked.`;
+  return `2nd candidate added. ${row.id} now has two S candidates on ${oto.winningFeature}. The first S row wins: ${winner.name} (${winnerAdmissions}).`;
 }
 
 function handleTableEdit(event) {
@@ -1359,15 +1152,77 @@ function handleTableEdit(event) {
     input.classList.toggle('is-empty', !normaliseText(input.value));
   }
 
-  // Recompute everything consistently on Step 1
+  // Recompute everything so later steps match the edited tables
   state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
-  state.statusHint = 'Table updated. Click Next to run through steps 1 to 6.';
-  state.statusHintType = 'warn';
+  state.statusHint = 'Table changed. Press Next to follow it through the steps.';
+  state.statusHintType = 'info';
 
   const hintEl = document.getElementById('status-hint');
   hintEl.textContent = state.statusHint;
-  hintEl.classList.add('is-warn');
+  hintEl.classList.remove('is-warn');
   hintEl.classList.remove('hidden');
+}
+
+function isTypingTarget(el) {
+  if (!el || !el.tagName) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+}
+
+/** True if the element sits inside a strip that really scrolls sideways. */
+function insideHorizontalScroller(el) {
+  if (!el || !el.closest) return false;
+  const scroller = el.closest('.table-wrap, .stepper-list');
+  return Boolean(scroller && scroller.scrollWidth > scroller.clientWidth + 1);
+}
+
+function initSwipe() {
+  let start = null;
+
+  document.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 1) { start = null; return; }
+    const target = event.target;
+    if (
+      isTypingTarget(target) ||
+      (target.closest && target.closest('input, textarea, select, .help-pop')) ||
+      insideHorizontalScroller(target)
+    ) {
+      start = null;
+      return;
+    }
+    const t = event.touches[0];
+    start = { x: t.clientX, y: t.clientY, time: Date.now() };
+  }, { passive: true });
+
+  document.addEventListener('touchend', (event) => {
+    if (!start) return;
+    const t = event.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    const elapsed = Date.now() - start.time;
+    start = null;
+    if (elapsed > 900) return;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      goToStep(dx < 0 ? state.step + 1 : state.step - 1);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', () => { start = null; }, { passive: true });
+}
+
+function initHelp() {
+  const btn = document.getElementById('btn-help');
+  const pop = document.getElementById('help-pop');
+
+  btn.addEventListener('click', () => setHelpOpen(!isHelpOpen()));
+  document.getElementById('btn-help-close').addEventListener('click', () => setHelpOpen(false, true));
+
+  // Click or tap outside closes the popup
+  document.addEventListener('pointerdown', (event) => {
+    if (!isHelpOpen()) return;
+    if (pop.contains(event.target) || btn.contains(event.target)) return;
+    setHelpOpen(false);
+  });
 }
 
 function initEvents() {
@@ -1375,16 +1230,17 @@ function initEvents() {
   document.getElementById('btn-next').addEventListener('click', () => goToStep(state.step + 1));
 
   document.getElementById('btn-reset').addEventListener('click', () => {
+    const direction = state.step === 1 ? 0 : -1;
     state.step = 1;
     state.usePhonetic = false;
     state.teacherView = false;
     state.hasExtraCandidate = false;
-    state.statusHint = 'Reset to default scenario.';
+    state.statusHint = 'Back to the default example.';
     state.statusHintType = 'info';
     state.rRows = cloneRows(DEFAULT_R);
     state.sRows = cloneRows(DEFAULT_S);
     state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
-    render();
+    render(direction);
   });
 
   document.getElementById('stepper-list').addEventListener('click', (event) => {
@@ -1397,8 +1253,8 @@ function initEvents() {
     state.usePhonetic = event.target.checked;
     state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
     state.statusHint = state.usePhonetic
-      ? 'Phonetic name key enabled: Mueller and Müller now map to the same key.'
-      : 'Phonetic name key disabled: names are compared as plain normalised strings.';
+      ? 'Phonetic name key on. Mueller and Müller now give the same key.'
+      : 'Phonetic name key off. Names must match letter by letter.';
     state.statusHintType = 'info';
     render();
   });
@@ -1411,7 +1267,7 @@ function initEvents() {
   document.getElementById('btn-randomise').addEventListener('click', () => {
     state.sim = rerandomiseSimulationShares(state.sim, state.sRows);
     state.flashShares = true;
-    state.statusHint = 'Shares re-randomised: individual shares changed, while the underlying true bits stayed identical.';
+    state.statusHint = 'New random shares. The hidden answers stay the same.';
     state.statusHintType = 'info';
     render();
   });
@@ -1422,35 +1278,54 @@ function initEvents() {
       state.hasExtraCandidate = true;
       state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
       state.statusHint = buildSecondCandidateHint();
-      state.statusHintType = 'info';
     } else {
       state.sRows = state.sRows.filter((row) => !row.isExtra);
       state.hasExtraCandidate = false;
       state.sim = runSimulation(state.rRows, state.sRows, state.usePhonetic);
-      state.statusHint = 'Removed second candidate from S.';
-      state.statusHintType = 'info';
+      state.statusHint = 'Removed the 2nd candidate.';
     }
+    state.statusHintType = 'info';
     render();
   });
 
-  // Delegate table edits on the stage (input for live recompute, change to normalise numeric display)
+  // Table edits on the stage (input for live recompute, change to tidy numbers)
   const stage = document.getElementById('stage');
   stage.addEventListener('input', handleTableEdit);
   stage.addEventListener('change', handleTableEdit);
+  stage.addEventListener('animationend', () => stage.classList.remove('enter-next', 'enter-prev'));
 
-  // Keyboard navigation: Left/Right arrows when not typing or scrolling a table
+  // Keyboard: arrows move, ? or i toggles help, Escape closes it
   document.addEventListener('keydown', (event) => {
-    const target = event.target;
-    const tag = target && target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    if (target && target.closest && target.closest('.table-wrap')) return;
-    if (event.key === 'ArrowRight') {
-      goToStep(state.step + 1);
-    } else if (event.key === 'ArrowLeft') {
-      goToStep(state.step - 1);
+    if (event.key === 'Escape' && isHelpOpen()) {
+      setHelpOpen(false, true);
+      return;
     }
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (isTypingTarget(event.target)) return;
+
+    if (event.key === '?' || event.key === 'i' || event.key === 'I') {
+      event.preventDefault();
+      setHelpOpen(!isHelpOpen());
+      return;
+    }
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    if (insideHorizontalScroller(event.target)) return;
+    event.preventDefault();
+    goToStep(event.key === 'ArrowRight' ? state.step + 1 : state.step - 1);
   });
+
+  initHelp();
+  initSwipe();
 }
 
-initEvents();
-render();
+if (typeof document !== 'undefined') {
+  initEvents();
+  render();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    DEFAULT_R, DEFAULT_S, EXTRA_CANDIDATE_S, FEATURES, STEP_META,
+    phoneticNameKey, computeRecordFeatures, runSimulation, rerandomiseSimulationShares
+  };
+}

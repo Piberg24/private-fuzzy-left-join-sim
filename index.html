@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Private Fuzzy Left Join — Simulator</title>
+  <title>Private Fuzzy Left Join, Simulator</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -33,24 +33,41 @@
         </button>
 
         <button type="button" id="btn-randomise" class="btn btn-outline hidden">
-          Randomise shares
+          New random shares
         </button>
 
         <label class="toggle-label hidden" id="teacher-toggle-wrap" for="toggle-teacher">
           <input type="checkbox" id="toggle-teacher">
-          <span>Teacher view: reveal true bits</span>
+          <span>Reveal hidden bits</span>
         </label>
       </div>
     </section>
 
+    <div class="step-bar" id="step-bar">
+      <div class="step-heading">
+        <span class="step-count" id="step-count">Step 1 of 6</span>
+        <h2 class="step-title" id="step-title">Inputs</h2>
+        <button type="button" id="btn-help" class="help-btn"
+                aria-expanded="false" aria-controls="help-pop"
+                aria-label="Explain this step" title="Explain this step (press ?)">?</button>
+      </div>
+      <span class="nav-hint" aria-hidden="true">
+        <span class="hint-keys"><kbd>←</kbd> <kbd>→</kbd> to move, <kbd>?</kbd> to explain</span>
+        <span class="hint-touch">Swipe to move</span>
+      </span>
+
+      <div id="help-pop" class="help-pop" role="dialog" aria-modal="false" aria-labelledby="help-title">
+        <div class="help-head">
+          <span class="help-title" id="help-title">1/6: Inputs</span>
+          <button type="button" id="btn-help-close" class="help-close" aria-label="Close explanation">×</button>
+        </div>
+        <ul class="help-list" id="help-list"></ul>
+      </div>
+    </div>
+
     <div id="status-hint" class="status-hint hidden" role="status" aria-live="polite"></div>
 
-    <section class="caption-box" aria-live="polite">
-      <div class="caption-step" id="caption-step">1/6 · Inputs</div>
-      <ul class="caption-bullets" id="caption-text"></ul>
-    </section>
-
-    <main id="stage" class="stage" tabindex="-1"></main>
+    <main id="stage" class="stage"></main>
   </div>
 
   <script src="app.js"></script>
