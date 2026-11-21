@@ -1614,3 +1614,36 @@ tr.is-extra-row td {
     min-width: 6.5rem;
   }
 }
+
+/* Phones: every dock button shows its number and a short step name */
+@media (max-width: 768px) {
+  .mobile-steps {
+    border-radius: 16px;
+  }
+
+  .mobile-step-btn {
+    height: auto;
+    min-height: 40px;
+    padding: 0.2rem 0.1rem;
+    border-radius: 13px;
+    flex-direction: column;
+    gap: 0.05rem;
+    line-height: 1.05;
+  }
+
+  .mobile-step-num {
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  .mobile-step-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  .page-shell {
+    padding-bottom: calc(134px + env(safe-area-inset-bottom, 0px));
+  }
+}

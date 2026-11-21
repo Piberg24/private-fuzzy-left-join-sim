@@ -1062,6 +1062,8 @@ function render(direction) {
   // 1b. Mobile bottom dock step pills (1..6)
   const mobileSteps = document.getElementById('mobile-steps');
   if (mobileSteps) {
+    // Short labels that fit under the number on a 320 px phone.
+    const MOBILE_LABELS = ['Inputs', 'Keys', 'PSI', 'OTO', 'Payload', 'Output'];
     mobileSteps.innerHTML = STEP_META.map((s) => {
       let cls = 'mobile-step-btn';
       if (s.num === state.step) cls += ' is-current';
@@ -1069,7 +1071,7 @@ function render(direction) {
       const currentAttr = s.num === state.step ? ' aria-current="step"' : '';
       return `
         <li>
-          <button type="button" class="${cls}" data-step="${s.num}" aria-label="Step ${s.num}: ${escapeHtml(s.short)}"${currentAttr}>${s.num}</button>
+          <button type="button" class="${cls}" data-step="${s.num}" aria-label="Step ${s.num}: ${escapeHtml(s.short)}"${currentAttr}><span class="mobile-step-num">${s.num}</span><span class="mobile-step-label" aria-hidden="true">${MOBILE_LABELS[s.num - 1]}</span></button>
         </li>`;
     }).join('');
   }
