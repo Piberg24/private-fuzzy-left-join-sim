@@ -93,7 +93,7 @@ const STEP_META = [
       'Step 3 can give up to 3 yeses per person. A join needs exactly one partner.',
       'The rule is simple. f1 beats f2, f2 beats f3. Everything after the first yes is dropped.',
       'The result is again split into fresh random bits.',
-      'Here one program does the maths. In the real protocol S and R compute it together.'
+      'Here one program does the maths. In the real protocol S and R compute it together, with secret-shared selector gates built from oblivious transfer.'
     ]
   },
   {
@@ -113,7 +113,7 @@ const STEP_META = [
     heading: 'R unlocks the result',
     title: '6/6: Output',
     bullets: [
-      'S sends its numbers to R. R combines them with its own: s ⊕ r.',
+      'Until now both sides hold only shares. In our scenario S sends its numbers to R, and R combines them with its own: s ⊕ r.',
       'Match = 1 means R reads the admission count. Match = 0 means R drops the dummy.',
       'S learns nothing, not even how many people matched.'
     ]
@@ -952,7 +952,7 @@ function renderStep6() {
       <ul class="s-learns-list">
         <li>No names, birth dates or ZIP codes from R.</li>
         <li>Not which patients matched, not even how many.</li>
-        <li>Only the table sizes are public (S has ${state.sRows.length} rows, R has ${state.rRows.length}).</li>
+        <li>Only the table sizes and the number of keys are public (S has ${state.sRows.length} rows, R has ${state.rRows.length}, ${FEATURES.length} keys).</li>
       </ul>
     </div>`;
 
@@ -963,9 +963,10 @@ function renderStep6() {
         tableHtml(['Study ID', 'Participant', 's ⊕ r', 'Result'], joinedBody))}
     </div>
     ${panelHtml('panel-summary',
-      panelHead(null, 'Deciding key', ''),
+      panelHead(null, 'Behind the scenes: which key decided', 'teacher view'),
+      `<p class="summary-note">For teaching only. In the real protocol neither party learns which key matched or which S record it was.</p>` +
       tableHtml(['Study ID', 'Deciding key', 'Matched S record', 'Note'], featureSummaryBody),
-      ' aria-label="Deciding key summary"')}
+      ' aria-label="Behind the scenes: deciding key, not revealed by the protocol"')}
   `;
 }
 

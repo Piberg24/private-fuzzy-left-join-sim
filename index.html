@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Private Fuzzy Left Join, Simulator</title>
-  <link rel="icon" href="hsg-mark.png?v=4" type="image/png">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="icon" href="hsg-mark.png?v=5" type="image/png">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <div class="page-shell">
@@ -64,7 +64,8 @@
       </div>
       <div class="about-body">
         <p>Interactive demo of how two databases match records without sharing their tables.</p>
-        <p>Built for our HSG Advanced Cybersecurity presentation, based on Han, Kim and Son, "Private Computation on Common Fuzzy Records" (PoPETs 2025).</p>
+        <p>Built for our HSG Advanced Cybersecurity presentation, based on Han, Kim and Son, <a href="https://doi.org/10.56553/popets-2025-0031" target="_blank" rel="noopener">"Private Computation on Common Fuzzy Records"</a> (PoPETs 2025). Their implementation: <a href="https://github.com/samsungsds-research-papers/FuzzyPC" target="_blank" rel="noopener">FuzzyPC</a>.</p>
+        <p>Simplified here: one program computes everything, keys are plain strings instead of hashed or LSH features, and the shares are random numbers from the browser. The real protocol runs one circuit-PSI per key, aligns the outputs with permute-and-share and picks the first match with secret-shared selector gates.</p>
         <p class="about-note">Didactic browser simulation with fictive data, not real cryptography.</p>
       </div>
     </div>
@@ -131,6 +132,6 @@
     </div>
   </nav>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

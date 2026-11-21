@@ -1427,3 +1427,49 @@ tr.is-extra-row td {
     font-size: 0.74rem;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Desktop and projector: content starts under the step bar instead of floating
+   in the middle, and the free height goes into larger, readable tables.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .stage {
+    justify-content: flex-start;
+    padding-top: 1.25rem;
+    gap: 1.4rem;
+  }
+
+  table {
+    font-size: 0.95rem;
+  }
+
+  th {
+    font-size: 0.74rem;
+  }
+
+  th,
+  td {
+    padding: 0.34rem 0.5rem;
+  }
+
+  .cell-input {
+    font-size: 0.95rem;
+    height: 1.9rem;
+  }
+
+  .share-chip {
+    font-size: 0.98rem;
+    height: 1.7rem;
+    min-width: 1.8rem;
+  }
+
+  .flow-strip {
+    font-size: 0.98rem;
+  }
+}
+
+.summary-note {
+  margin: 0.15rem 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
