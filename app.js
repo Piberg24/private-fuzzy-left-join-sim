@@ -558,7 +558,8 @@ function panelHtml(cls, head, inner, extraAttrs) {
 function flowStrip(items) {
   const parts = items.map((item, i) => {
     const pill = `<span class="flow-pill${item.focus ? ' is-focus' : ''}">${item.text}</span>`;
-    return i === 0 ? pill : `<span class="flow-arrow">→</span>${pill}`;
+    // Arrow and its pill wrap together, so a line never ends with a dangling arrow.
+    return i === 0 ? pill : `<span class="flow-step"><span class="flow-arrow">→</span>${pill}</span>`;
   });
   return `<div class="flow-strip" aria-hidden="true">${parts.join('')}</div>`;
 }
